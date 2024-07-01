@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,8 +18,10 @@ public class StageManager : MonoBehaviour
     [SerializeField, Header("爆弾を置き換える(デバッグ用)")]
     bool on_changemine = true;
 
-    [SerializeField]//ステージのタイルマップ(現状地雷、数字、ブロックを同じタイルマップで管理しているが、数字にも接触してしまうため要変更)
-    Tilemap stage_tilemap;
+    [SerializeField]//ブロックのタイルマップ
+    Tilemap block_tilemap;
+    [SerializeField]//ブロック下のタイルマップ（地雷、数字）
+    Tilemap under_tilemap;
     //ブロックのTileBase
     [SerializeField]//ブロック
     TileBase tile_block;
@@ -26,6 +29,9 @@ public class StageManager : MonoBehaviour
     TileBase tile_mine;
     [SerializeField]//数字
     TileBase[] tile_num = new TileBase[9];
+
+    [SerializeField]//誘爆の待ち時間
+    float chain_explo_delay = 0.3f;
 
     //マップデータ
     Dictionary<Vector2Int, int> map_data = new Dictionary<Vector2Int, int>();
@@ -53,7 +59,7 @@ public class StageManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0))
         {
             Vector3 mouse_pos = GetMousePos();
             //無理やり0以下でも問題が起きないようにする
@@ -61,46 +67,51 @@ public class StageManager : MonoBehaviour
             if (mouse_pos.y < 0) mouse_pos.y -= 1.0f;
             //intに変換
             Vector2Int int_mouse_pos = new Vector2Int((int)mouse_pos.x, (int)mouse_pos.y);
-
-            //その座標にブロックデータがあれば
-            if (map_data.ContainsKey(int_mouse_pos))
-            {
-                OpenBlock(int_mouse_pos);
-            }
+      
+            OpenBlock(int_mouse_pos);//マウス位置のブロックを開く
+            
         }
+    }
+
+    // 一定時間後に処理を呼び出すコルーチン
+    private IEnumerator DelayCoroutine(float seconds, Action action)
+    {
+        yield return new WaitForSeconds(seconds);
+        action?.Invoke();
     }
 
     //ブロックを開ける
     public void OpenBlock(Vector2Int _pos)
     {
-        //すでに開いているなら実行しない
-        if (stage_tilemap.GetTile((Vector3Int)_pos) == null) return;
+        Debug.Log(nameof(OpenBlock)  + "id:" + map_data[_pos] + " : "+ _pos);
+        //その座標にブロックデータが無ければ実行しない
+        if (!map_data.ContainsKey(_pos)) return;
+        //何もないマスなら実行しない
+        if (block_tilemap.GetTile((Vector3Int)_pos) == null &&
+            under_tilemap.GetTile((Vector3Int)_pos) == null) return;
+        
 
         int block_id = map_data[_pos];
-        TileBase tile = null;
+
+        UpdateTileNum(_pos);//数字の画像更新
+      
         Debug.Log("ブロックのID" + block_id);
 
         //地雷なら
         if (block_id == BLOCK_MINE)
         {
-            Explosion(_pos);
-        }
-        //通常のブロックなら
-        else
-        {
-            //0以外は数字を出す
-            if (block_id > BLOCK_EMPTY)
-                tile = tile_num[block_id];
+            map_data[_pos] = SearchMine(_pos);//この位置のidを空白に変更
+            UpdateTileNum(_pos);//画像更新
+
+            Explosion(_pos);//爆発処理
         }
 
-        stage_tilemap.SetTile((Vector3Int)_pos, tile);//タイルの置き換え
+        block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
     }
 
     //爆発
     public void Explosion(Vector2Int _pos)
     {
-        map_data[_pos] = BLOCK_EMPTY;//この位置のidを空白に変更
-
         //全オブジェクトに爆発の情報を渡す
         GameObject[] all_obj = GameObject.FindGameObjectsWithTag("Object");
         foreach(GameObject obj in all_obj)
@@ -112,46 +123,78 @@ public class StageManager : MonoBehaviour
         for (int i = 0; i < surround_pos.Length; i++)
         {
             Vector2Int pos = _pos + surround_pos[i];
+            //マップ情報無しなら何もしない
             if (!map_data.ContainsKey(pos)) continue;
 
-            //地雷以外ならカウントを減らす
-            if (map_data[pos] != BLOCK_MINE)
+            //誘爆（ワンテンポ遅らせるようにする）
+            if(map_data[pos] == BLOCK_MINE)
+            {
+                // コルーチンの起動
+                StartCoroutine(DelayCoroutine(chain_explo_delay, () =>
+                {
+                    Debug.Log("誘爆");
+                    // 3秒後にここの処理が実行される
+                    OpenBlock(pos);//爆発処理
+                }));
+                continue;
+            }
+            //地雷と空白以外ならカウントを減らす
+            else if (map_data[pos] != BLOCK_EMPTY)
+            {
                 map_data[pos]--;
 
-
-            OpenBlock(pos);
+                OpenBlock(pos);
+            }
         }
+    }
+
+    //タイルの数字の見た目情報更新
+    public void UpdateTileNum(Vector2Int _pos)
+    {       
+        int block_id = map_data[_pos];
+        if (block_id >= BLOCK_MINE) return;//地雷なら更新しない
+
+        TileBase tile = null;//変更するタイル
+
+        //0以外は数字を出す
+        if (block_id > BLOCK_EMPTY)
+        {
+            tile = tile_num[block_id];//数字タイル
+        }
+
+        //タイルの置き換え
+        under_tilemap.SetTile((Vector3Int)_pos, tile);
     }
 
     //全タイルのブロック情報を取得
     public void GetBlockData()
     {
-        //タイルマップの情報取得
-        foreach(var pos in stage_tilemap.cellBounds.allPositionsWithin)
+        //ブロックタイルマップの情報取得
+        foreach (var pos in block_tilemap.cellBounds.allPositionsWithin)
         {
             //その位置にタイルが無ければ処理しない
-            if (!stage_tilemap.HasTile(pos)) continue;
-
-            int obj_id;
-
-            if (stage_tilemap.GetTile(pos) == tile_mine)
-            {
-                Debug.Log("設置");
-                if(on_changemine)
-                    //地雷の見た目を通常のブロックに変更
-                    stage_tilemap.SetTile(pos, tile_block);
-
-                obj_id = BLOCK_MINE;
-            }
-            else
-            {
-                obj_id = BLOCK_EMPTY;
-            }
+            if (!block_tilemap.HasTile(pos)) continue;
 
             //位置情報とオブジェクト情報を保存
-            map_data.Add( (Vector2Int)pos ,obj_id);
-
+            map_data.Add((Vector2Int)pos, BLOCK_EMPTY);
         }
+
+        //地雷の位置情報取得
+        foreach (var pos in under_tilemap.cellBounds.allPositionsWithin)
+        {
+            //その位置にタイルが無ければ処理しない
+            if (!under_tilemap.HasTile(pos)) continue;
+
+            Debug.Log("設置");
+            if (on_changemine)
+                //ブロックタイルを重ねるように設置
+                block_tilemap.SetTile(pos, tile_block);
+
+            //位置情報とオブジェクト情報を保存
+            map_data.Add((Vector2Int)pos, BLOCK_MINE);
+        }
+
+        
     }
 
     //マウスの座標取得
@@ -164,6 +207,24 @@ public class StageManager : MonoBehaviour
         return pos;
     }
 
+    //周囲8マスの地雷の数を調べる関数(座標)
+    public int SearchMine(Vector2Int _pos)
+    {
+        int mine_count = 0;
+
+        //周囲8マスを探索
+        for (int i = 0; i < surround_pos.Length; i++)
+        {
+            Vector2Int pos = _pos + surround_pos[i];
+            if (!map_data.ContainsKey(pos)) continue; //データがあるか
+            if (map_data[pos] != BLOCK_MINE) continue;//地雷のみ計算
+        
+            mine_count++;
+        }
+
+        return mine_count;
+    }
+
     //地雷の周囲8マスのカウントを変更
     public void SetMineCount()
     {
@@ -173,22 +234,11 @@ public class StageManager : MonoBehaviour
         //地雷を探す
         foreach (KeyValuePair<Vector2Int, int> data in map_data)
         {
-            if (data.Value != BLOCK_MINE) continue;
+            if (data.Value == BLOCK_MINE) continue;//地雷マスには数値を設定しない
 
-            //周囲8マスを探索
-            for(int i=0; i<surround_pos.Length; i++)
-            {
-                Vector2Int pos = data.Key + surround_pos[i];
-                if (!map_data.ContainsKey(pos)) continue;
-                if (map_data[pos] == BLOCK_MINE) continue;//地雷は計算しない
+            int id = SearchMine(data.Key);//周囲の地雷の数を調べる
+            mine_count.Add(data.Key, id);
 
-                //カウント追加
-                if (mine_count.ContainsKey(pos))
-                    mine_count[pos]++;
-                else
-                    mine_count.Add(pos, 1);
-                
-            }
         }
         //マップの値を変更（直にmap_dataを変えるとエラーが起きる）
         foreach (KeyValuePair<Vector2Int, int> data in mine_count)
@@ -196,4 +246,6 @@ public class StageManager : MonoBehaviour
             map_data[data.Key] += data.Value;
         }
     }
+
+    
 }
