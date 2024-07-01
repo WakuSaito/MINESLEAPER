@@ -17,6 +17,8 @@ public class StageManager : MonoBehaviour
 
     [SerializeField, Header("爆弾を置き換える(デバッグ用)")]
     bool on_changemine = true;
+    [SerializeField, Header("空白ブロックが連続で開く(デバッグ用)")]
+    bool on_areaopen = true;
 
     [SerializeField]//ブロックのタイルマップ
     Tilemap block_tilemap;
@@ -107,7 +109,20 @@ public class StageManager : MonoBehaviour
         }
 
         block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
+
+        if (block_id == BLOCK_EMPTY && on_areaopen)
+        {
+            //周囲8マスを探索
+            for (int i = 0; i < surround_pos.Length; i++)
+            {
+                Vector2Int pos = _pos + surround_pos[i];
+                if (!map_data.ContainsKey(pos)) continue; //データがあるか
+
+                OpenBlock(pos);
+            }
+        }
     }
+
 
     //爆発
     public void Explosion(Vector2Int _pos)
@@ -129,6 +144,8 @@ public class StageManager : MonoBehaviour
             //誘爆（ワンテンポ遅らせるようにする）
             if(map_data[pos] == BLOCK_MINE)
             {
+                block_tilemap.SetTile((Vector3Int)pos, null);//ブロックの削除 位置を変更する可能性アリ
+
                 // コルーチンの起動
                 StartCoroutine(DelayCoroutine(chain_explo_delay, () =>
                 {

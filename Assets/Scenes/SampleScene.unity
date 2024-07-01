@@ -1395,7 +1395,7 @@ GameObject:
   - component: {fileID: 1508675219}
   - component: {fileID: 1508675218}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: StageManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1413,7 +1413,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c56fde4b8680646839cb783f1a0dbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  on_changemine: 0
+  on_changemine: 1
+  on_areaopen: 1
   block_tilemap: {fileID: 1044479644}
   under_tilemap: {fileID: 679078663}
   tile_block: {fileID: 11400000, guid: 7836077ade5f4a94b9ac8f5bc651838b, type: 2}
