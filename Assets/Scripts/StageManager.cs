@@ -4,11 +4,38 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-//public struct TileData
-//{
-//    public int id;
-//    public bool is_open;
-//}
+public enum BlockId
+{
+    EMPTY=0,
+    NUM1,
+    NUM2,
+    NUM3,
+    NUM4,
+    NUM5,
+    NUM6,
+    NUM7,
+    NUM8,
+    MINE,
+}
+
+public class StageData
+{
+    private Dictionary<Vector2Int, BlockId> data = new Dictionary<Vector2Int, BlockId>();
+
+    public void SetData(Vector2Int _pos, BlockId _id)
+    {
+        if (data.ContainsKey(_pos))
+        {
+            data[_pos] = _id;
+        }
+        else
+        {
+            data.Add(_pos, _id);
+        }
+
+    }
+}
+
 
 public class StageManager : MonoBehaviour
 {

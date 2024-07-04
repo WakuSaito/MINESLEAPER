@@ -11,6 +11,9 @@ public class ObjectManager : MonoBehaviour
     [SerializeField]//爆風を受けられる距離
     float can_hit_distance = 1.5f;
 
+    [SerializeField]//所持している特性
+    string[] have_ability;
+
     bool on_moveing = false;//移動中フラグ
     Vector2 movetarget_pos;//移動目標地点
 
