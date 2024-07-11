@@ -1014,16 +1014,6 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: -3, y: 3, z: 0}
-    second:
-      serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 0
-      m_TileMatrixIndex: 0
-      m_TileColorIndex: 0
-      m_TileObjectToInstantiateIndex: 65535
-      dummyAlignment: 0
-      m_AllTileFlags: 1073741825
   - first: {x: -2, y: 3, z: 0}
     second:
       serializedVersion: 2
@@ -1066,17 +1056,17 @@ Tilemap:
       m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 52
+  - m_RefCount: 51
     m_Data: {fileID: 11400000, guid: 7836077ade5f4a94b9ac8f5bc651838b, type: 2}
   - m_RefCount: 0
     m_Data: {fileID: 0}
   m_TileSpriteArray:
-  - m_RefCount: 52
+  - m_RefCount: 51
     m_Data: {fileID: 21300000, guid: 7c5403272c25db04cb4b4ff393b97bfd, type: 3}
   - m_RefCount: 0
     m_Data: {fileID: 0}
   m_TileMatrixArray:
-  - m_RefCount: 52
+  - m_RefCount: 51
     m_Data:
       e00: 1
       e01: 0
@@ -1095,7 +1085,7 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 52
+  - m_RefCount: 51
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -1231,7 +1221,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1473045799}
   - component: {fileID: 1473045798}
-  - component: {fileID: 1473045797}
+  - component: {fileID: 1473045800}
   - component: {fileID: 1473045796}
   - component: {fileID: 1473045795}
   m_Layer: 0
@@ -1303,20 +1293,6 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.5
---- !u!114 &1473045797
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1473045794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47ab2e34df5ca884ea668e097435287e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  move_length: 3
-  can_hit_distance: 1.5
 --- !u!212 &1473045798
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1384,6 +1360,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1473045800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473045794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08b1ba28303d4194da8bdd9440b7dbf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  move_length: 3
+  can_hit_distance: 1.5
+  have_ability: []
+  moveSpeed: 1
 --- !u!1 &1508675217
 GameObject:
   m_ObjectHideFlags: 0

@@ -18,27 +18,11 @@ public enum BlockId
     MINE,
 }
 
-public class StageData
-{
-    private Dictionary<Vector2Int, BlockId> data = new Dictionary<Vector2Int, BlockId>();
-
-    public void SetData(Vector2Int _pos, BlockId _id)
-    {
-        if (data.ContainsKey(_pos))
-        {
-            data[_pos] = _id;
-        }
-        else
-        {
-            data.Add(_pos, _id);
-        }
-
-    }
-}
-
 
 public class StageManager : MonoBehaviour
 {
+    StageData stage;
+
     const int BLOCK_EMPTY = 0;//ãÛÇÃID
     const int BLOCK_MINE = 9; //ínóãÇÃID
 
@@ -66,7 +50,7 @@ public class StageManager : MonoBehaviour
     Dictionary<Vector2Int, int> map_data = new Dictionary<Vector2Int, int>();
 
     //é¸àÕÇÃç¿ïW
-    Vector2Int[] surround_pos = new Vector2Int[8]
+    readonly Vector2Int[] surround_pos = 
     {
         new Vector2Int( 0, 1),//è„
         new Vector2Int( 1, 1),//âEè„
