@@ -41,6 +41,14 @@ public class ObjectManager : MonoBehaviour
 
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.tag == "Goal")
+        {
+            Debug.Log("ƒS[ƒ‹");
+        }
+    }
+
     //”š•—‚Ì‰e‹¿‚ğó‚¯‚éŠÖ”
     public void HitExplosion(Vector2Int _pos)//–€C‚ğ‰Á‚¦‚½‚¢
     {

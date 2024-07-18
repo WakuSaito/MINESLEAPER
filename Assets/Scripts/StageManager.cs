@@ -18,27 +18,11 @@ public enum BlockId
     MINE,
 }
 
-public class StageData
-{
-    private Dictionary<Vector2Int, BlockId> data = new Dictionary<Vector2Int, BlockId>();
-
-    public void SetData(Vector2Int _pos, BlockId _id)
-    {
-        if (data.ContainsKey(_pos))
-        {
-            data[_pos] = _id;
-        }
-        else
-        {
-            data.Add(_pos, _id);
-        }
-
-    }
-}
-
 
 public class StageManager : MonoBehaviour
 {
+    StageData stage = new StageData();
+
     const int BLOCK_EMPTY = 0;//空のID
     const int BLOCK_MINE = 9; //地雷のID
 
@@ -51,6 +35,11 @@ public class StageManager : MonoBehaviour
     Tilemap block_tilemap;
     [SerializeField]//ブロック下のタイルマップ（地雷、数字）
     Tilemap under_tilemap;
+    [SerializeField]//壁のタイルマップ
+    Tilemap wall_tilemap;
+    [SerializeField]//地面のタイルマップ
+    Tilemap ground_tilemap;
+
     //ブロックのTileBase
     [SerializeField]//ブロック
     TileBase tile_block;
@@ -62,11 +51,9 @@ public class StageManager : MonoBehaviour
     [SerializeField]//誘爆の待ち時間
     float chain_explo_delay = 0.3f;
 
-    //マップデータ
-    Dictionary<Vector2Int, int> map_data = new Dictionary<Vector2Int, int>();
 
     //周囲の座標
-    Vector2Int[] surround_pos = new Vector2Int[8]
+    readonly Vector2Int[] surround_pos = 
     {
         new Vector2Int( 0, 1),//上
         new Vector2Int( 1, 1),//右上
@@ -81,9 +68,16 @@ public class StageManager : MonoBehaviour
 
     private void Start()
     {
+        //ステージのブロックデータ取得
         GetBlockData();
 
-        SetMineCount();
+        //全空白の数字を更新
+        foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
+        {
+            if (data.Value != ObjId.EMPTY) continue;//空白部分のみ数字を出す
+
+            UpdateTileNum(data.Key);//更新
+        }
     }
 
     private void Update()
@@ -112,38 +106,34 @@ public class StageManager : MonoBehaviour
     //ブロックを開ける
     public void OpenBlock(Vector2Int _pos)
     {
-        Debug.Log(nameof(OpenBlock)  + "id:" + map_data[_pos] + " : "+ _pos);
-        //その座標にブロックデータが無ければ実行しない
-        if (!map_data.ContainsKey(_pos)) return;
-        //何もないマスなら実行しない
-        if (block_tilemap.GetTile((Vector3Int)_pos) == null &&
-            under_tilemap.GetTile((Vector3Int)_pos) == null) return;
-        
+        ObjId block_id = stage.GetData(_pos);
 
-        int block_id = map_data[_pos];
+        Debug.Log(nameof(OpenBlock)  + "id:" + block_id + " : "+ _pos);
+        //ブロックと地雷のみ実行
+        if (block_id != ObjId.BLOCK && 
+            block_id != ObjId.MINE) return;
 
+        stage.SetData(_pos, ObjId.EMPTY);//空白に変える
         UpdateTileNum(_pos);//数字の画像更新
       
         Debug.Log("ブロックのID" + block_id);
 
         //地雷なら
-        if (block_id == BLOCK_MINE)
+        if (block_id == ObjId.MINE)
         {
-            map_data[_pos] = SearchMine(_pos);//この位置のidを空白に変更
-            UpdateTileNum(_pos);//画像更新
-
             Explosion(_pos);//爆発処理
         }
 
         block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
 
-        if (block_id == BLOCK_EMPTY && on_areaopen)
+        //連続して開ける
+        if (block_id == ObjId.BLOCK && GetMineCount(_pos) == 0 && on_areaopen)
         {
             //周囲8マスを探索
             for (int i = 0; i < surround_pos.Length; i++)
             {
                 Vector2Int pos = _pos + surround_pos[i];
-                if (!map_data.ContainsKey(pos)) continue; //データがあるか
+                if (stage.GetData(pos) == ObjId.NULL) continue; //データがあるか
 
                 OpenBlock(pos);
             }
@@ -155,21 +145,22 @@ public class StageManager : MonoBehaviour
     public void Explosion(Vector2Int _pos)
     {
         //全オブジェクトに爆発の情報を渡す
-        GameObject[] all_obj = GameObject.FindGameObjectsWithTag("Object");
-        foreach(GameObject obj in all_obj)
-        {
-            obj.GetComponent<ObjectManager>().HitExplosion(_pos);
-        }
+        //GameObject[] all_obj = GameObject.FindGameObjectsWithTag("Object");
+        //foreach(GameObject obj in all_obj)
+        //{
+        //    obj.GetComponent<ObjectManager>().HitExplosion(_pos);
+        //}
 
         //周囲8マスを探索
         for (int i = 0; i < surround_pos.Length; i++)
         {
+            //周囲の座標
             Vector2Int pos = _pos + surround_pos[i];
-            //マップ情報無しなら何もしない
-            if (!map_data.ContainsKey(pos)) continue;
+
+            ObjId id = stage.GetData(pos);
 
             //誘爆（ワンテンポ遅らせるようにする）
-            if(map_data[pos] == BLOCK_MINE)
+            if(id == ObjId.MINE)
             {
                 block_tilemap.SetTile((Vector3Int)pos, null);//ブロックの削除 位置を変更する可能性アリ
 
@@ -182,63 +173,95 @@ public class StageManager : MonoBehaviour
                 }));
                 continue;
             }
-            //地雷と空白以外ならカウントを減らす
-            else if (map_data[pos] != BLOCK_EMPTY)
+            //ブロックは開く
+            else if (id == ObjId.BLOCK)
             {
-                map_data[pos]--;
-
                 OpenBlock(pos);
+            }
+            //空白なら数字更新
+            else if(id == ObjId.EMPTY)
+            {
+                UpdateTileNum(pos);
             }
         }
     }
 
     //タイルの数字の見た目情報更新
-    public void UpdateTileNum(Vector2Int _pos)
+    private void UpdateTileNum(Vector2Int _pos)
     {       
-        int block_id = map_data[_pos];
-        if (block_id >= BLOCK_MINE) return;//地雷なら更新しない
+        if (stage.GetData(_pos) != ObjId.EMPTY) return;//空白のみ更新
 
-        TileBase tile = null;//変更するタイル
+        int num = GetMineCount(_pos);
 
-        //0以外は数字を出す
-        if (block_id > BLOCK_EMPTY)
-        {
-            tile = tile_num[block_id];//数字タイル
-        }
+        TileBase tile = tile_num[num];//変更するタイル
 
         //タイルの置き換え
         under_tilemap.SetTile((Vector3Int)_pos, tile);
     }
 
-    //全タイルのブロック情報を取得
-    public void GetBlockData()
+    //周囲8マスの地雷の数を調べる関数(座標)
+    private int GetMineCount(Vector2Int _pos)
     {
-        //ブロックタイルマップの情報取得
+        int mine_count = 0;
+
+        //周囲8マスを探索
+        for (int i = 0; i < surround_pos.Length; i++)
+        {
+            Vector2Int pos = _pos + surround_pos[i];
+            if (stage.GetData(pos) != ObjId.MINE) continue;//地雷のみ計算
+
+            mine_count++;
+        }
+
+        Debug.Log("周囲の地雷の数:" + mine_count);
+        return mine_count;
+    }
+
+    //全タイルのブロック情報を取得
+    private void GetBlockData()
+    {
+        //ブロックの情報取得
         foreach (var pos in block_tilemap.cellBounds.allPositionsWithin)
         {
             //その位置にタイルが無ければ処理しない
             if (!block_tilemap.HasTile(pos)) continue;
 
             //位置情報とオブジェクト情報を保存
-            map_data.Add((Vector2Int)pos, BLOCK_EMPTY);
+            stage.SetData((Vector2Int)pos, ObjId.BLOCK);
         }
-
         //地雷の位置情報取得
         foreach (var pos in under_tilemap.cellBounds.allPositionsWithin)
         {
             //その位置にタイルが無ければ処理しない
             if (!under_tilemap.HasTile(pos)) continue;
 
-            Debug.Log("設置");
             if (on_changemine)
                 //ブロックタイルを重ねるように設置
                 block_tilemap.SetTile(pos, tile_block);
 
             //位置情報とオブジェクト情報を保存
-            map_data.Add((Vector2Int)pos, BLOCK_MINE);
+            stage.SetData((Vector2Int)pos, ObjId.MINE);
         }
+        //壁の情報取得
+        foreach (var pos in wall_tilemap.cellBounds.allPositionsWithin)
+        {
+            //その位置にタイルが無ければ処理しない
+            if (!wall_tilemap.HasTile(pos)) continue;
 
-        
+            //位置情報とオブジェクト情報を保存
+            stage.SetData((Vector2Int)pos, ObjId.WALL);
+        }
+        //壁の情報取得
+        foreach (var pos in ground_tilemap.cellBounds.allPositionsWithin)
+        {
+            //その位置にタイルが無ければ処理しない
+            if (!ground_tilemap.HasTile(pos)) continue;
+            //すでに他のデータがあるなら処理しない
+            if (stage.GetData((Vector2Int)pos) != ObjId.NULL) continue;
+
+            //位置情報とオブジェクト情報を保存
+            stage.SetData((Vector2Int)pos, ObjId.EMPTY);
+        }
     }
 
     //マウスの座標取得
@@ -251,45 +274,60 @@ public class StageManager : MonoBehaviour
         return pos;
     }
 
-    //周囲8マスの地雷の数を調べる関数(座標)
-    public int SearchMine(Vector2Int _pos)
+    public ObjId GetTileId(Vector2Int _pos)
     {
-        int mine_count = 0;
+        return stage.GetData(_pos);
+    }
 
-        //周囲8マスを探索
+    //ブロックを押す関数
+    public bool PushBlock(Vector2Int _pos, Vector2Int _vec)
+    {
+        ObjId id = GetTileId(_pos);
+        //ブロック、地雷のみ押せる
+        if (id != ObjId.BLOCK && id != ObjId.MINE) return false;
+       
+        //移動先座標
+        Vector2Int next_pos = _pos + _vec;
+        //移動先のidを取得
+        ObjId next_id = GetTileId(next_pos);
+        
+        //移動先が空白以外
+        if(next_id != ObjId.EMPTY)
+        {
+            //移動先のブロックを押す
+            if (!PushBlock(next_pos, _vec)) return false;
+        }
+      
+        stage.Move(_pos, next_pos);
+
+        //移動先画像変更
+        block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
+        //現座標画像変更
+        block_tilemap.SetTile((Vector3Int)_pos, null);
+
+
+        //数字の更新
         for (int i = 0; i < surround_pos.Length; i++)
         {
+            //周囲の座標
             Vector2Int pos = _pos + surround_pos[i];
-            if (!map_data.ContainsKey(pos)) continue; //データがあるか
-            if (map_data[pos] != BLOCK_MINE) continue;//地雷のみ計算
-        
-            mine_count++;
+
+            if (stage.GetData(pos) == ObjId.EMPTY)
+                UpdateTileNum(pos);
+        }
+        for (int i = 0; i < surround_pos.Length; i++)
+        {
+            //周囲の座標
+            Vector2Int pos = next_pos + surround_pos[i];
+
+            if (stage.GetData(pos) == ObjId.EMPTY)
+                UpdateTileNum(pos);
         }
 
-        return mine_count;
+        Debug.Log("押す");
+
+        return true;
     }
 
-    //地雷の周囲8マスのカウントを変更
-    public void SetMineCount()
-    {
-        Debug.Log("サイズ : " + map_data.Count);
-        Dictionary<Vector2Int, int> mine_count = new Dictionary<Vector2Int, int>();
 
-        //地雷を探す
-        foreach (KeyValuePair<Vector2Int, int> data in map_data)
-        {
-            if (data.Value == BLOCK_MINE) continue;//地雷マスには数値を設定しない
-
-            int id = SearchMine(data.Key);//周囲の地雷の数を調べる
-            mine_count.Add(data.Key, id);
-
-        }
-        //マップの値を変更（直にmap_dataを変えるとエラーが起きる）
-        foreach (KeyValuePair<Vector2Int, int> data in mine_count)
-        {
-            map_data[data.Key] += data.Value;
-        }
-    }
-
-    
 }
