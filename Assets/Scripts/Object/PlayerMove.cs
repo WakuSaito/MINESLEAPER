@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
-    Rigidbody2D rb;
+    [SerializeField, Header("ブロックを押せる(デバッグ用)")]
+    bool on_canpush = true;
+
+    [SerializeField]
+    StageManager stageManager;
 
     [SerializeField]//爆発での移動距離
     float move_length = 3.0f;
@@ -13,9 +17,6 @@ public class PlayerMove : MonoBehaviour
 
     [SerializeField]//所持している特性
     string[] have_ability;
-
-    bool on_moveing = false;//移動中フラグ
-    Vector2 movetarget_pos;//移動目標地点
 
     bool isMoving; // 移動中判定
     // Playerから移動速度を取得できるように設定
@@ -26,41 +27,71 @@ public class PlayerMove : MonoBehaviour
 
     private void Awake()
     {
-        rb = gameObject.GetComponent<Rigidbody2D>();
     }
 
     
     void Update()
     {
+        
+
         // 移動中だと入力を受け付けない
         if (!isMoving)
         {
+            input = Vector2.zero;
+
             // キーボードの入力情報をinputに格納
-            input.x = Input.GetAxisRaw("Horizontal"); // 横方向
-            input.y = Input.GetAxisRaw("Vertical");  // 縦方向
+            if (Input.GetKeyDown(KeyCode.D))           
+                input.x = 1.0f;
+            else if (Input.GetKeyDown(KeyCode.A))
+                input.x = -1.0f;
+            else if (Input.GetKeyDown(KeyCode.W))
+                input.y = 1.0f;
+            else if (Input.GetKeyDown(KeyCode.S))
+                input.y = -1.0f;
 
             // 入力があった時
             if (input != Vector2.zero)
             {
-                // 入力があった分を目的地にする
-                Vector2 targetPos = transform.position;
-                targetPos += input;
-                StartCoroutine(Move(targetPos));
+                StartCoroutine( Move( GetIntPos(input) ) );
             }
         }
     }
 
     //　コルーチンを使って徐々に目的地に近づける
-    IEnumerator Move(Vector3 targetPos)
+    IEnumerator Move(Vector2Int _vec)
     {
+        //現座標
+        Vector2Int pos = GetIntPos();
+        //移動先座標
+        Vector2 targetPos = (Vector2)transform.position + _vec;
+        Debug.Log(_vec);
+
+        //移動先のidを取得
+        ObjId id = stageManager.GetTileId(GetIntPos(targetPos));
+        Debug.Log("移動先id:" + id + ":" + targetPos);
+
+       
+        if (id != ObjId.EMPTY)
+        {
+            //ブロックを押す
+            if (on_canpush)
+            {
+                if (!stageManager.PushBlock(pos + _vec, _vec))
+                    yield break;
+            }
+            else
+                yield break;//移動しない
+        }
+
+
         // 移動中は入力を受け付けない
         isMoving = true;
 
         // targetposとの差があるなら繰り返す:目的地に辿り着くまで繰り返す
-        while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
+        while ((targetPos - (Vector2)transform.position).sqrMagnitude > Mathf.Epsilon)
         {
             // targetPosに近づける
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
             // 徐々に近づけるため
             yield return null;
         }
@@ -84,8 +115,20 @@ public class PlayerMove : MonoBehaviour
     {
         Vector2 pos = transform.position;
         //無理やり0以下でも問題が起きないようにする
-        if (pos.x < 0) pos.x -= 1.0f;
-        if (pos.y < 0) pos.y -= 1.0f;
+        if (pos.x < 0) pos.x -= 0.9999f;
+        if (pos.y < 0) pos.y -= 0.9999f;
+        //intに変換
+        Vector2Int int_pos = new Vector2Int((int)pos.x, (int)pos.y);
+
+        return int_pos;
+    }
+    //引数をint型に変換
+    public Vector2Int GetIntPos(Vector2 _pos)
+    {
+        Vector2 pos = _pos;
+        //無理やり0以下でも問題が起きないようにする
+        if (pos.x < 0) pos.x -= 0.9999f;
+        if (pos.y < 0) pos.y -= 0.9999f;
         //intに変換
         Vector2Int int_pos = new Vector2Int((int)pos.x, (int)pos.y);
 

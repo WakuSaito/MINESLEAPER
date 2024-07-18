@@ -5,18 +5,18 @@ using UnityEngine;
 
 public enum ObjId
 {
-    NULL=-1,
-    EMPTY=0,
-    WALL,
-    BLOCK,
-
+    NULL=-1,//存在しない
+    EMPTY=0,//空白
+    WALL,   //壁
+    BLOCK,  //何もないブロック
+    MINE,   //地雷
 }
 
 //ステージデータクラス
 public class StageData
 {
-    //マップデータ
-    private Dictionary<Vector2Int, ObjId> data = 
+    //マップデータ　一旦public
+    public Dictionary<Vector2Int, ObjId> data = 
         new Dictionary<Vector2Int, ObjId>();
 
     public ObjId GetData(Vector2Int _pos)
