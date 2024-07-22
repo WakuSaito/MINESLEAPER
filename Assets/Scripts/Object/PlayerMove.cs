@@ -18,12 +18,12 @@ public class PlayerMove : MonoBehaviour
     [SerializeField]//所持している特性
     string[] have_ability;
 
-    bool isMoving; // 移動中判定
+    public bool is_moving; // 移動中判定
     // Playerから移動速度を取得できるように設定
     [SerializeField] float moveSpeed;
 
     // 外部で入力内容を保持する用の変数
-    Vector2 input;
+    Vector2Int input_vec;
 
     private void Awake()
     {
@@ -32,34 +32,20 @@ public class PlayerMove : MonoBehaviour
     
     void Update()
     {
-        
-
-        // 移動中だと入力を受け付けない
-        if (!isMoving)
+        // 入力があった時
+        if (input_vec != Vector2Int.zero)
         {
-            input = Vector2.zero;
-
-            // キーボードの入力情報をinputに格納
-            if (Input.GetKeyDown(KeyCode.D))           
-                input.x = 1.0f;
-            else if (Input.GetKeyDown(KeyCode.A))
-                input.x = -1.0f;
-            else if (Input.GetKeyDown(KeyCode.W))
-                input.y = 1.0f;
-            else if (Input.GetKeyDown(KeyCode.S))
-                input.y = -1.0f;
-
-            // 入力があった時
-            if (input != Vector2.zero)
-            {
-                StartCoroutine( Move( GetIntPos(input) ) );
-            }
+            StartCoroutine(Move(input_vec));
+            input_vec = Vector2Int.zero;
         }
+        
     }
 
     //　コルーチンを使って徐々に目的地に近づける
     IEnumerator Move(Vector2Int _vec)
     {
+        if (is_moving) yield break;//移動中なら停止
+
         //現座標
         Vector2Int pos = GetIntPos();
         //移動先座標
@@ -85,7 +71,7 @@ public class PlayerMove : MonoBehaviour
 
 
         // 移動中は入力を受け付けない
-        isMoving = true;
+        is_moving = true;
 
         // targetposとの差があるなら繰り返す:目的地に辿り着くまで繰り返す
         while ((targetPos - (Vector2)transform.position).sqrMagnitude > Mathf.Epsilon)
@@ -98,15 +84,23 @@ public class PlayerMove : MonoBehaviour
 
         // 移動処理が完了したら目的地に到着させる
         transform.position = targetPos;
-        isMoving = false;
+        is_moving = false;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    //private void OnCollisionEnter2D(Collision2D collision)
+    //{
+    //    if (collision.gameObject.tag == "Goal")
+    //    {
+    //        Debug.Log("ゴール");
+    //    }
+    //}
+
+    public void SetInputVec(Vector2Int _vec)
     {
-        if (collision.gameObject.tag == "Goal")
-        {
-            Debug.Log("ゴール");
-        }
+        input_vec = _vec;
+        //斜め移動できないようにする　x優先
+        if (input_vec.x != 0)
+            input_vec.y = 0;  
     }
 
 
@@ -133,5 +127,17 @@ public class PlayerMove : MonoBehaviour
         Vector2Int int_pos = new Vector2Int((int)pos.x, (int)pos.y);
 
         return int_pos;
+    }
+
+    public PlayerMemento CreateMemento()
+    {
+        var memento = new PlayerMemento();
+        memento.position = transform.position;
+        return memento;
+    }
+
+    public void SetMemento(PlayerMemento memento)
+    {
+        transform.position = memento.position;
     }
 }

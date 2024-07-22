@@ -66,7 +66,7 @@ public class StageManager : MonoBehaviour
     };
 
 
-    private void Start()
+    private void Awake()
     {
         //ステージのブロックデータ取得
         GetBlockData();
@@ -80,21 +80,6 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 mouse_pos = GetMousePos();
-            //無理やり0以下でも問題が起きないようにする
-            if (mouse_pos.x < 0) mouse_pos.x -= 1.0f;
-            if (mouse_pos.y < 0) mouse_pos.y -= 1.0f;
-            //intに変換
-            Vector2Int int_mouse_pos = new Vector2Int((int)mouse_pos.x, (int)mouse_pos.y);
-      
-            OpenBlock(int_mouse_pos);//マウス位置のブロックを開く
-            
-        }
-    }
 
     // 一定時間後に処理を呼び出すコルーチン
     private IEnumerator DelayCoroutine(float seconds, Action action)
@@ -251,7 +236,7 @@ public class StageManager : MonoBehaviour
             //位置情報とオブジェクト情報を保存
             stage.SetData((Vector2Int)pos, ObjId.WALL);
         }
-        //壁の情報取得
+        //地面の情報取得
         foreach (var pos in ground_tilemap.cellBounds.allPositionsWithin)
         {
             //その位置にタイルが無ければ処理しない
@@ -264,15 +249,7 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    //マウスの座標取得
-    public Vector3 GetMousePos()
-    {
-        Vector3 pos = Input.mousePosition;
-        pos = Camera.main.ScreenToWorldPoint(pos);
-        pos.z = 10.0f;
-
-        return pos;
-    }
+  
 
     public ObjId GetTileId(Vector2Int _pos)
     {
@@ -329,5 +306,46 @@ public class StageManager : MonoBehaviour
         return true;
     }
 
+    //ステージデータ記録
+    public StageMemento CreateMemento()
+    {
+        var memento = new StageMemento();
+        memento.stageData = stage;
 
+        return memento;
+    }
+
+    //ステージデータのロード
+    public void SetMemento(StageMemento memento)
+    {
+        stage = memento.stageData;
+
+        //タイル配置し直し
+        foreach(var data in stage.data)
+        {
+            switch (data.Value)
+            {
+                case ObjId.EMPTY:
+                    block_tilemap.SetTile((Vector3Int)data.Key, null);
+                    under_tilemap.SetTile((Vector3Int)data.Key, null);
+                    break;
+                case ObjId.BLOCK:
+                    block_tilemap.SetTile((Vector3Int)data.Key, tile_block);
+                    under_tilemap.SetTile((Vector3Int)data.Key, null);
+                    break;
+                case ObjId.MINE:
+                    block_tilemap.SetTile((Vector3Int)data.Key, null);
+                    under_tilemap.SetTile((Vector3Int)data.Key, tile_mine);
+                    break;
+            }
+        }
+
+        //全空白の数字を更新
+        foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
+        {
+            if (data.Value != ObjId.EMPTY) continue;//空白部分のみ数字を出す
+
+            UpdateTileNum(data.Key);//更新
+        }
+    }
 }
