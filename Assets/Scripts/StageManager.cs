@@ -21,6 +21,8 @@ public enum BlockId
 
 public class StageManager : MonoBehaviour
 {
+    SaveData saveData;
+
     StageData stage = new StageData();
 
     const int BLOCK_EMPTY = 0;//空のID
@@ -68,6 +70,8 @@ public class StageManager : MonoBehaviour
 
     private void Awake()
     {
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+
         //ステージのブロックデータ取得
         GetBlockData();
 
@@ -89,19 +93,18 @@ public class StageManager : MonoBehaviour
     }
 
     //ブロックを開ける
-    public void OpenBlock(Vector2Int _pos)
+    public bool OpenBlock(Vector2Int _pos)
     {
         ObjId block_id = stage.GetData(_pos);
 
         Debug.Log(nameof(OpenBlock)  + "id:" + block_id + " : "+ _pos);
         //ブロックと地雷のみ実行
         if (block_id != ObjId.BLOCK && 
-            block_id != ObjId.MINE) return;
+            block_id != ObjId.MINE) return false;
 
         stage.SetData(_pos, ObjId.EMPTY);//空白に変える
         UpdateTileNum(_pos);//数字の画像更新
       
-        Debug.Log("ブロックのID" + block_id);
 
         //地雷なら
         if (block_id == ObjId.MINE)
@@ -123,6 +126,11 @@ public class StageManager : MonoBehaviour
                 OpenBlock(pos);
             }
         }
+
+        if (saveData)
+            saveData.CreateMemento();//状態保存
+
+        return true;
     }
 
 
@@ -198,7 +206,6 @@ public class StageManager : MonoBehaviour
             mine_count++;
         }
 
-        Debug.Log("周囲の地雷の数:" + mine_count);
         return mine_count;
     }
 
@@ -309,9 +316,13 @@ public class StageManager : MonoBehaviour
     //ステージデータ記録
     public StageMemento CreateMemento()
     {
+        //ディープコピー　（シャローコピーになる時があるっぽい　リスト削除と追加が悪さしてそう）
+        //Debug.Log("StageMementoの作成");
         var memento = new StageMemento();
-        memento.stageData = stage;
+        memento.stageData = new StageData();
+        memento.stageData.data = new Dictionary<Vector2Int, ObjId>(stage.data);
 
+        
         return memento;
     }
 

@@ -6,8 +6,10 @@ public class InputManager : MonoBehaviour
 {
     StageManager stageManager;
     PlayerMove playerMove;
+    SaveData saveData;
 
     [SerializeField] GameObject selectTile;
+ 
 
     //選択中の座標
     Vector2Int select_pos;
@@ -18,6 +20,12 @@ public class InputManager : MonoBehaviour
         //オブジェクト取得
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+    }
+
+    private void Start()
+    {
+        saveData.CreateMemento();
     }
 
 
@@ -57,6 +65,9 @@ public class InputManager : MonoBehaviour
                 stageManager.OpenBlock(select_pos);//マウス位置のブロックを開く
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.R))
+            saveData.SetMemento(saveData.GetMementoEnd() - 1);
     }
 
 

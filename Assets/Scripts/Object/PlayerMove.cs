@@ -10,6 +10,8 @@ public class PlayerMove : MonoBehaviour
     [SerializeField]
     StageManager stageManager;
 
+    SaveData saveData;
+
     [SerializeField]//”š”­‚Å‚ÌˆÚ“®‹——£
     float move_length = 3.0f;
     [SerializeField]//”š•—‚ğó‚¯‚ç‚ê‚é‹——£
@@ -27,9 +29,11 @@ public class PlayerMove : MonoBehaviour
 
     private void Awake()
     {
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+
     }
 
-    
+
     void Update()
     {
         // “ü—Í‚ª‚ ‚Á‚½
@@ -85,6 +89,9 @@ public class PlayerMove : MonoBehaviour
         // ˆÚ“®ˆ—‚ªŠ®—¹‚µ‚½‚ç–Ú“I’n‚É“’…‚³‚¹‚é
         transform.position = targetPos;
         is_moving = false;
+
+        if (saveData)
+            saveData.CreateMemento();//ó‘Ô•Û‘¶
     }
 
     //private void OnCollisionEnter2D(Collision2D collision)
@@ -131,6 +138,7 @@ public class PlayerMove : MonoBehaviour
 
     public PlayerMemento CreateMemento()
     {
+        //Debug.Log("PlayerMemento‚Ìì¬");
         var memento = new PlayerMemento();
         memento.position = transform.position;
         return memento;
@@ -138,6 +146,7 @@ public class PlayerMove : MonoBehaviour
 
     public void SetMemento(PlayerMemento memento)
     {
+        //Debug.Log("PlayerMemento‚ÌŒÄ‚Ño‚µ" + memento.position);
         transform.position = memento.position;
     }
 }
