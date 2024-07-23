@@ -320,7 +320,16 @@ public class StageManager : MonoBehaviour
         //Debug.Log("StageMemento�̍쐬");
         var memento = new StageMemento();
         memento.stageData = new StageData();
-        memento.stageData.data = new Dictionary<Vector2Int, ObjId>(stage.data);
+
+        foreach(var data in stage.data)
+        {
+            int x = data.Key.x;
+            int y = data.Key.y;
+            int id = (int)data.Value;
+            Vector2Int pos = new Vector2Int(x, y);
+            memento.stageData.SetData(pos, (ObjId)id);
+        }
+        //memento.stageData.data = new Dictionary<Vector2Int, ObjId>(stage.data);
 
         
         return memento;

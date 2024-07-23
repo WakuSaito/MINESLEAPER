@@ -57,12 +57,12 @@ public class SaveData : MonoBehaviour
 
         //不要なデータの削除
         int next = _num + 1;
-        if(next < data_size)
+        if(_num < data_size)
         {
             Debug.Log("Mementoデータ削除:" + next + ":" + (data_size - next));
-            memento_data.RemoveRange(next, data_size - next);//次のデータから末尾まで削除
+            memento_data.RemoveRange(_num, data_size - _num);//次のデータから末尾まで削除
         }
-
+        CreateMemento();
     }
 
     //memento_dataの終端を取得
