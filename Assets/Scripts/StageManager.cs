@@ -69,12 +69,19 @@ public class StageManager : MonoBehaviour
         new Vector2Int(-1, 0),
         new Vector2Int(-1, 1)
     };
-
+    //周囲4方向の座標
+    readonly Vector2Int[] surround4_pos =
+    {
+        new Vector2Int( 0, 1),//上
+        new Vector2Int( 1, 0),//右
+        new Vector2Int( 0,-1),
+        new Vector2Int(-1, 0),
+    };
 
     private void Awake()
     {
         //ステージのブロックデータ取得
-        GetBlockData();
+        GetAllBlockData();
 
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
@@ -123,10 +130,10 @@ public class StageManager : MonoBehaviour
         //連続して開ける
         if (block_id == ObjId.BLOCK && GetMineCount(_pos) == 0 && on_areaopen)
         {
-            //周囲8マスを探索
-            for (int i = 0; i < surround_pos.Length; i++)
+            //周囲4マスを探索
+            for (int i = 0; i < surround4_pos.Length; i++)
             {
-                Vector2Int pos = _pos + surround_pos[i];
+                Vector2Int pos = _pos + surround4_pos[i];
                 if (stage.GetData(pos) == ObjId.NULL) continue; //データがあるか
 
                 OpenBlock(pos, true);//旗ごと開ける
@@ -215,7 +222,7 @@ public class StageManager : MonoBehaviour
     }
 
     //周囲8マスの地雷の数を調べる関数(座標)
-    private int GetMineCount(Vector2Int _pos)
+    public int GetMineCount(Vector2Int _pos)
     {
         int mine_count = 0;
 
@@ -232,7 +239,7 @@ public class StageManager : MonoBehaviour
     }
 
     //全タイルのブロック情報を取得
-    private void GetBlockData()
+    private void GetAllBlockData()
     {
         //ブロックの情報取得
         foreach (var pos in block_tilemap.cellBounds.allPositionsWithin)
@@ -304,11 +311,19 @@ public class StageManager : MonoBehaviour
             if (!PushBlock(next_pos, _vec)) return false;
         }
 
-        SwitchFlag(_pos);//旗の情報変更
+        if (stage_flag.GetData(_pos) == ObjId.FLAG)//旗の移動
+        {
+            SwitchFlag(_pos);//旗の情報変更
 
-        stage.Move(_pos, next_pos);
+            stage.Move(_pos, next_pos);
 
-        SwitchFlag(next_pos);//旗の情報変更
+            SwitchFlag(next_pos);//旗の情報変更
+        }
+        else
+        {
+            stage.Move(_pos, next_pos);
+        }
+            
 
         //移動先画像変更
         if (!on_changemine && id == ObjId.MINE)

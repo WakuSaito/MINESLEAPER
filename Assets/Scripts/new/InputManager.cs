@@ -13,10 +13,19 @@ public class InputManager : MonoBehaviour
 
     [SerializeField] GameObject selectTile;
  
-
     //選択中の座標
     Vector2Int select_pos;
+    //選択中のID
+    ObjId select_id;
 
+    //左クリックを押し続けているか
+    bool is_hold_clickL = false;
+    //左クリック開始地点
+    Vector2Int start_pos_clickL;
+    //左クリックを押している時間
+    float time_hold_clickL = 0.0f;
+    [SerializeField]//成立する長押しの時間
+    float hold_sec = 1.0f;
 
     private void Awake()
     {
@@ -29,6 +38,7 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         saveData.CreateMemento();
+        start_pos_clickL = Vector2Int.zero;
     }
 
 
@@ -64,39 +74,87 @@ public class InputManager : MonoBehaviour
             selectTile.transform.position = pos;
         }
 
+        //id取得
+        select_id = stageManager.GetTileId(select_pos);
 
-        //入力
+        //入力処理
         {
             //プレイヤーの移動
             Vector2Int input_vec = new Vector2Int();
             input_vec.x = (int)Input.GetAxisRaw("Horizontal");
             input_vec.y = (int)Input.GetAxisRaw("Vertical");
             //ベクトル設定
-            if(playerMove.StartMove(input_vec))
-            {
-                
-            }
+            playerMove.StartMove(input_vec);
+
 
             //ブロックを開ける
             if (Input.GetMouseButtonDown(0) && 
                 !playerMove.is_moving)//移動中は実行しない
             {
-                //マウス位置のブロックを開く
-                if (stageManager.OpenBlock(select_pos))
+                switch (select_id)
                 {
-                    //開けたら状態保存
-                    EndAction();
+                    case ObjId.BLOCK:
+                    case ObjId.MINE:
+                        //マウス位置のブロックを開く
+                        if (stageManager.OpenBlock(select_pos))
+                        {
+                            //開けたら状態保存
+                            EndAction();
+                        }
+                        break;
+
+                    case ObjId.EMPTY:
+                        //数字がある時のみ実行
+                        if (stageManager.GetMineCount(select_pos) <= 0) break;
+
+                        is_hold_clickL = true;//クリック状態切り替え
+                        start_pos_clickL = select_pos;//クリック位置保存
+                        break;            
                 }
+                
             }
+            else if(Input.GetMouseButtonUp(0))
+            {
+                is_hold_clickL = false;//クリック状態切り替え
+            }
+
             //旗設置切り替え  
             if(Input.GetMouseButtonDown(1))
             {
                 stageManager.SwitchFlag(select_pos);
             }
+
+            //アンドゥ
+            if (Input.GetKeyDown(KeyCode.R))
+                saveData.SetMemento(saveData.GetMementoEnd() - 1);
         }
 
-        if (Input.GetKeyDown(KeyCode.R))
-            saveData.SetMemento(saveData.GetMementoEnd() - 1);
+        //長押し処理
+        {
+            if (is_hold_clickL &&
+                start_pos_clickL == select_pos) //押し始めた位置と現在の位置が同じ    
+            {
+                //時間カウント
+                time_hold_clickL += Time.deltaTime;           
+            }
+            else
+            {
+                //時間リセット
+                time_hold_clickL = 0.0f;
+                //長押し解除
+                is_hold_clickL = false;
+            }
+            //成立したときの処理
+            if(time_hold_clickL >= hold_sec)
+            {
+                //リセット
+                is_hold_clickL = false;
+                time_hold_clickL = 0.0f;
+
+                Debug.Log("実行");
+            }
+        }
+
     }
 
     //何か行動を終えたら呼ばれる
