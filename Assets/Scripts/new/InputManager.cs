@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    [SerializeField, Header("プレーヤーの周りのみ開けられる(デバッグ用)")]
+    bool on_open_surroundonly = true;
+
     StageManager stageManager;
     PlayerMove playerMove;
     SaveData saveData;
@@ -33,21 +36,34 @@ public class InputManager : MonoBehaviour
     void Update()
     {
         Vector2Int p_pos = playerMove.GetIntPos();//プレイヤー座標取得
-        
-        if (p_pos != GetIntMousePos())
+
+        //選択ブロックを決める
+        if (on_open_surroundonly)//通常
         {
-            //選択位置を決める
-            select_pos = p_pos + GetDirectionPM();
+            if (p_pos != GetIntMousePos())
+            {
+                //選択位置を決める
+                select_pos = p_pos + GetDirectionPM();
+                Vector3 pos = new Vector3(select_pos.x + 0.5f, select_pos.y + 0.5f, 0);
+                //見た目変更
+                selectTile.SetActive(true);
+                selectTile.transform.position = pos;
+            }
+            else
+            {
+                select_pos = p_pos;
+                selectTile.SetActive(false);
+            }
+        }
+        else//どこでも開けられる
+        {
+            select_pos = GetIntMousePos();
             Vector3 pos = new Vector3(select_pos.x + 0.5f, select_pos.y + 0.5f, 0);
             //見た目変更
             selectTile.SetActive(true);
             selectTile.transform.position = pos;
         }
-        else
-        {
-            select_pos = p_pos;
-            selectTile.SetActive(false);
-        }
+
 
         //入力
         {
@@ -56,18 +72,38 @@ public class InputManager : MonoBehaviour
             input_vec.x = (int)Input.GetAxisRaw("Horizontal");
             input_vec.y = (int)Input.GetAxisRaw("Vertical");
             //ベクトル設定
-            playerMove.SetInputVec(input_vec);
+            if(playerMove.StartMove(input_vec))
+            {
+                
+            }
 
             //ブロックを開ける
             if (Input.GetMouseButtonDown(0) && 
                 !playerMove.is_moving)//移動中は実行しない
             {
-                stageManager.OpenBlock(select_pos);//マウス位置のブロックを開く
+                //マウス位置のブロックを開く
+                if (stageManager.OpenBlock(select_pos))
+                {
+                    //開けたら状態保存
+                    EndAction();
+                }
+            }
+            //旗設置切り替え  
+            if(Input.GetMouseButtonDown(1))
+            {
+                stageManager.SwitchFlag(select_pos);
             }
         }
 
         if (Input.GetKeyDown(KeyCode.R))
             saveData.SetMemento(saveData.GetMementoEnd() - 1);
+    }
+
+    //何か行動を終えたら呼ばれる
+    private void EndAction()
+    {
+        //状態保存
+        saveData.CreateMemento();
     }
 
 

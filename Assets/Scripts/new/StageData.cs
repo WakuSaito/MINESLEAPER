@@ -10,6 +10,7 @@ public enum ObjId
     WALL,   //壁
     BLOCK,  //何もないブロック
     MINE,   //地雷
+    FLAG,   //旗
 }
 
 //ステージデータクラス
@@ -61,6 +62,13 @@ public class StageData
         data[_pos2] = tmp;
 
         return true;
+    }
+    //キー削除
+    public void Delete(Vector2Int _pos)
+    {
+        if (!data.ContainsKey(_pos)) return;
+
+        data.Remove(_pos);
     }
 
 }

@@ -21,9 +21,8 @@ public enum BlockId
 
 public class StageManager : MonoBehaviour
 {
-    SaveData saveData;
-
-    StageData stage = new StageData();
+    StageData stage = new StageData();      //ステージのブロックデータ
+    StageData stage_flag = new StageData(); //ステージの旗データ
 
     const int BLOCK_EMPTY = 0;//空のID
     const int BLOCK_MINE = 9; //地雷のID
@@ -33,6 +32,8 @@ public class StageManager : MonoBehaviour
     [SerializeField, Header("空白ブロックが連続で開く(デバッグ用)")]
     bool on_areaopen = true;
 
+    [SerializeField]//旗のタイルマップ
+    Tilemap flag_tilemap;
     [SerializeField]//ブロックのタイルマップ
     Tilemap block_tilemap;
     [SerializeField]//ブロック下のタイルマップ（地雷、数字）
@@ -47,6 +48,8 @@ public class StageManager : MonoBehaviour
     TileBase tile_block;
     [SerializeField]//爆弾
     TileBase tile_mine;
+    [SerializeField]//旗ブロック
+    TileBase tile_flag;
     [SerializeField]//数字
     TileBase[] tile_num = new TileBase[9];
 
@@ -70,8 +73,6 @@ public class StageManager : MonoBehaviour
 
     private void Awake()
     {
-        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
-
         //ステージのブロックデータ取得
         GetBlockData();
 
@@ -92,8 +93,8 @@ public class StageManager : MonoBehaviour
         action?.Invoke();
     }
 
-    //ブロックを開ける
-    public bool OpenBlock(Vector2Int _pos)
+    //ブロックを開ける(座標, 旗をこじ開けるか)
+    public bool OpenBlock(Vector2Int _pos, bool _flag_open=false)
     {
         ObjId block_id = stage.GetData(_pos);
 
@@ -101,6 +102,11 @@ public class StageManager : MonoBehaviour
         //ブロックと地雷のみ実行
         if (block_id != ObjId.BLOCK && 
             block_id != ObjId.MINE) return false;
+        //旗が設置していれば
+        if (!_flag_open && 
+            stage_flag.GetData(_pos) == ObjId.FLAG) return false;
+
+        DeleteFlag(_pos);//旗削除
 
         stage.SetData(_pos, ObjId.EMPTY);//空白に変える
         UpdateTileNum(_pos);//数字の画像更新
@@ -123,13 +129,9 @@ public class StageManager : MonoBehaviour
                 Vector2Int pos = _pos + surround_pos[i];
                 if (stage.GetData(pos) == ObjId.NULL) continue; //データがあるか
 
-                OpenBlock(pos);
+                OpenBlock(pos, true);//旗ごと開ける
             }
         }
-
-        if (saveData)
-            saveData.CreateMemento();//状態保存
-
         return true;
     }
 
@@ -137,13 +139,6 @@ public class StageManager : MonoBehaviour
     //爆発
     public void Explosion(Vector2Int _pos)
     {
-        //全オブジェクトに爆発の情報を渡す
-        //GameObject[] all_obj = GameObject.FindGameObjectsWithTag("Object");
-        //foreach(GameObject obj in all_obj)
-        //{
-        //    obj.GetComponent<ObjectManager>().HitExplosion(_pos);
-        //}
-
         //周囲8マスを探索
         for (int i = 0; i < surround_pos.Length; i++)
         {
@@ -177,6 +172,33 @@ public class StageManager : MonoBehaviour
                 UpdateTileNum(pos);
             }
         }
+    }
+
+    //旗設置切り替え
+    public void SwitchFlag(Vector2Int _pos)
+    {
+        if (stage.GetData(_pos) != ObjId.BLOCK &&
+            stage.GetData(_pos) != ObjId.MINE) return;
+
+        //未設置なら設置
+        if (stage_flag.GetData(_pos) != ObjId.FLAG)
+        {
+            stage_flag.SetData(_pos, ObjId.FLAG);
+            flag_tilemap.SetTile((Vector3Int)_pos, tile_flag);
+        }
+        else//設置済なら削除
+        {
+            stage_flag.Delete(_pos);
+            flag_tilemap.SetTile((Vector3Int)_pos, null);
+        }
+    }
+    //旗削除
+    public void DeleteFlag(Vector2Int _pos)
+    {
+        if (stage_flag.GetData(_pos) != ObjId.FLAG) return;
+
+        stage_flag.Delete(_pos);
+        flag_tilemap.SetTile((Vector3Int)_pos, null);
     }
 
     //タイルの数字の見た目情報更新
@@ -281,11 +303,18 @@ public class StageManager : MonoBehaviour
             //移動先のブロックを押す
             if (!PushBlock(next_pos, _vec)) return false;
         }
-      
+
+        SwitchFlag(_pos);//旗の情報変更
+
         stage.Move(_pos, next_pos);
 
+        SwitchFlag(next_pos);//旗の情報変更
+
         //移動先画像変更
-        block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
+        if (!on_changemine && id == ObjId.MINE)
+            block_tilemap.SetTile((Vector3Int)next_pos, tile_mine);
+        else
+            block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
         //現座標画像変更
         block_tilemap.SetTile((Vector3Int)_pos, null);
 
@@ -354,9 +383,19 @@ public class StageManager : MonoBehaviour
                     under_tilemap.SetTile((Vector3Int)data.Key, null);
                     break;
                 case ObjId.MINE:
-                    block_tilemap.SetTile((Vector3Int)data.Key, null);
+                    if(!on_changemine)
+                        block_tilemap.SetTile((Vector3Int)data.Key, null);
+                    else
+                        block_tilemap.SetTile((Vector3Int)data.Key, tile_block);
                     under_tilemap.SetTile((Vector3Int)data.Key, tile_mine);
                     break;
+            }
+        }
+        foreach(var data in stage_flag.data)
+        {
+            if(data.Value == ObjId.FLAG)
+            {
+                flag_tilemap.SetTile((Vector3Int)data.Key, tile_flag);
             }
         }
 
