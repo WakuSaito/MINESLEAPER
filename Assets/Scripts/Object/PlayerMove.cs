@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 //方向
 public enum Direction
@@ -65,24 +66,7 @@ public class PlayerMove : MonoBehaviour
         is_moving = false;
         saveData.CreateMemento();//状態保存
     }
-    IEnumerator Leap(Vector2 _target_pos)
-    {
-        is_leaping = true;
-        // targetposとの差があるなら繰り返す:目的地に辿り着くまで繰り返す
-        while ((_target_pos - (Vector2)transform.position).sqrMagnitude > Mathf.Epsilon)
-        {
-            // targetPosに近づける
-            transform.position = Vector2.MoveTowards(transform.position, _target_pos, moveSpeed * Time.deltaTime);
-            // 徐々に近づけるため
-            yield return null;
-        }
 
-        // 移動処理が完了したら目的地に到着させる
-        transform.position = _target_pos;
-        is_leaping = false;
-        saveData.CreateMemento();//状態保存
-        landing();//着地処理
-    }
     //着地処理
     private void landing()
     {
@@ -124,7 +108,18 @@ public class PlayerMove : MonoBehaviour
             else
                 target_pos += vec;
         }
-        StartCoroutine(Leap(target_pos));
+        is_leaping = true;
+        
+        //Leapアニメーション
+        var seq = DOTween.Sequence();
+        seq.Append(transform.DOMove(target_pos, 0.8f));//移動
+        seq.Join(transform.DOScale(Vector3.one * 1.1f, 0.4f).SetLoops(2, LoopType.Yoyo));//サイズ変更
+        seq.Play().OnComplete(() =>
+         {//終了処理
+             is_leaping = false;
+             saveData.CreateMemento();//状態保存
+             landing();//着地処理
+         });
     }
 
     public bool StartMove(Vector2Int _vec)
