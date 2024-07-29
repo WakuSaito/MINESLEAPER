@@ -316,14 +316,21 @@ public class StageManager : MonoBehaviour
         //移動先のidを取得
         ObjId next_id = GetTileId(next_pos);
         
+        
         //移動先が空白以外
-        if(next_id != ObjId.EMPTY)
+        if(next_id != ObjId.EMPTY || next_id != ObjId.HOLE)
         {
             //移動先のブロックを押す
             if (!PushBlock(next_pos, _vec)) return false;
         }
 
-        if (stage_flag.GetData(_pos) == ObjId.FLAG)//旗の移動
+        //移動先が穴
+        if (next_id == ObjId.HOLE)
+        {
+            DeleteFlag(_pos);
+            stage.SetData(_pos, ObjId.EMPTY);
+        }
+        else if (stage_flag.GetData(_pos) == ObjId.FLAG)//旗の移動
         {
             SwitchFlag(_pos);//旗の情報変更
 
@@ -335,13 +342,16 @@ public class StageManager : MonoBehaviour
         {
             stage.Move(_pos, next_pos);
         }
-            
 
-        //移動先画像変更
-        if (!on_changemine && id == ObjId.MINE)
-            block_tilemap.SetTile((Vector3Int)next_pos, tile_mine);
-        else
-            block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
+        //穴は変更しない　タイルの変更は関数を作成してもいいかも
+        if (next_id != ObjId.HOLE)
+        {
+            //移動先画像変更
+            if (!on_changemine && id == ObjId.MINE)
+                block_tilemap.SetTile((Vector3Int)next_pos, tile_mine);
+            else
+                block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
+        }
         //現座標画像変更
         block_tilemap.SetTile((Vector3Int)_pos, null);
 
@@ -372,22 +382,10 @@ public class StageManager : MonoBehaviour
     //ステージデータ記録
     public StageMemento CreateMemento()
     {
-        //ディープコピー　（シャローコピーになる時があるっぽい　リスト削除と追加が悪さしてそう）
-        //Debug.Log("StageMementoの作成");
         var memento = new StageMemento();
         memento.stageData = new StageData();
+        memento.stageData.data = new Dictionary<Vector2Int, ObjId>(stage.data);
 
-        foreach(var data in stage.data)
-        {
-            int x = data.Key.x;
-            int y = data.Key.y;
-            int id = (int)data.Value;
-            Vector2Int pos = new Vector2Int(x, y);
-            memento.stageData.SetData(pos, (ObjId)id);
-        }
-        //memento.stageData.data = new Dictionary<Vector2Int, ObjId>(stage.data);
-
-        
         return memento;
     }
 
