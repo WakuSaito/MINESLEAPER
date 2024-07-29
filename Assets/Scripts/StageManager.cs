@@ -24,6 +24,8 @@ public class StageManager : MonoBehaviour
     StageData stage = new StageData();      //ステージのブロックデータ
     StageData stage_flag = new StageData(); //ステージの旗データ
 
+    PlayerMove playerMove;//プレイヤースクリプト
+
     const int BLOCK_EMPTY = 0;//空のID
     const int BLOCK_MINE = 9; //地雷のID
 
@@ -80,6 +82,9 @@ public class StageManager : MonoBehaviour
 
     private void Awake()
     {
+        //スクリプト取得
+        playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
+
         //ステージのブロックデータ取得
         GetAllBlockData();
 
@@ -151,6 +156,13 @@ public class StageManager : MonoBehaviour
         {
             //周囲の座標
             Vector2Int pos = _pos + surround_pos[i];
+            //プレイヤーの座標
+            Vector2Int p_pos = playerMove.GetIntPos();
+            //周囲にプレイヤーがいた場合
+            if(pos == p_pos)
+            {
+                playerMove.StartLeap(_pos);//ふっとばし
+            }
 
             ObjId id = stage.GetData(pos);
 
