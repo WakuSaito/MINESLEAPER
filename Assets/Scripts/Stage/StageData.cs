@@ -11,6 +11,7 @@ public enum ObjId
     BLOCK,  //何もないブロック
     MINE,   //地雷
     FLAG,   //旗
+    HOLE,   //穴
 }
 
 //ステージデータクラス

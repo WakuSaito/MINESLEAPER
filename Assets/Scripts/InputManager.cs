@@ -88,8 +88,7 @@ public class InputManager : MonoBehaviour
 
 
             //ブロックを開ける
-            if (Input.GetMouseButtonDown(0) && 
-                !playerMove.is_moving)//移動中は実行しない
+            if (Input.GetMouseButtonDown(0))
             {
                 switch (select_id)
                 {
@@ -129,7 +128,7 @@ public class InputManager : MonoBehaviour
                 saveData.SetMemento(saveData.GetMementoEnd() - 1);
         }
 
-        //長押し処理
+        //長押し処理 没になるかも
         {
             if (is_hold_clickL &&
                 start_pos_clickL == select_pos) //押し始めた位置と現在の位置が同じ    
