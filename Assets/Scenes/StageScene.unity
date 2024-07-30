@@ -152,9 +152,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57ddbafb70d37384e8e409cce139c821, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  on_open_surroundonly: 0
+  on_open_frontonly: 1
   selectTile: {fileID: 719345608}
-  hold_sec: 1
 --- !u!4 &250289442
 Transform:
   m_ObjectHideFlags: 0
@@ -231,7 +230,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 9
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2389,9 +2388,8 @@ MonoBehaviour:
   on_canpush: 1
   move_length: 3
   can_hit_distance: 1.5
-  leap_distance: 3
-  is_moving: 0
-  is_leaping: 0
+  is_action: 0
+  attack_target_pos: {x: 0, y: 0}
   moveSpeed: 8
 --- !u!1 &1508675217
 GameObject:
@@ -2403,6 +2401,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1508675219}
   - component: {fileID: 1508675218}
+  - component: {fileID: 1508675220}
   m_Layer: 0
   m_Name: StageManager
   m_TagString: Untagged
@@ -2458,6 +2457,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1508675220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1508675217}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d61ecfa0998ae844f842090f63657c86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tile_block: {fileID: 0}
+  tile_mine: {fileID: 0}
+  block_parent: {fileID: 0}
+  mine_parent: {fileID: 0}
 --- !u!1 &1720055628
 GameObject:
   m_ObjectHideFlags: 0

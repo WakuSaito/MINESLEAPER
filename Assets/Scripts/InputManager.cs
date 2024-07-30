@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField, Header("プレーヤーの周りのみ開けられる(デバッグ用)")]
-    bool on_open_surroundonly = true;
+    [SerializeField, Header("プレーヤーの前方のみ開けられる(デバッグ用)")]
+    bool on_open_frontonly = true;
 
     StageManager stageManager;
     PlayerMove playerMove;
@@ -18,15 +18,6 @@ public class InputManager : MonoBehaviour
     //選択中のID
     ObjId select_id;
 
-    //左クリックを押し続けているか
-    bool is_hold_clickL = false;
-    //左クリック開始地点
-    Vector2Int start_pos_clickL;
-    //左クリックを押している時間
-    float time_hold_clickL = 0.0f;
-    [SerializeField]//成立する長押しの時間
-    float hold_sec = 1.0f;
-
     private void Awake()
     {
         //オブジェクト取得
@@ -38,9 +29,7 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         saveData.CreateMemento();
-        start_pos_clickL = Vector2Int.zero;
     }
-
 
     // Update is called once per frame
     void Update()
@@ -48,22 +37,20 @@ public class InputManager : MonoBehaviour
         Vector2Int p_pos = playerMove.GetIntPos();//プレイヤー座標取得
 
         //選択ブロックを決める
-        if (on_open_surroundonly)//通常
+        if (on_open_frontonly)//通常
         {
-            if (p_pos != GetIntMousePos())
+            //選択位置を決める
+            select_pos = playerMove.attack_target_pos;
+            Vector3 pos = new Vector3(select_pos.x + 0.5f, select_pos.y + 0.5f, 0);
+            if(!playerMove.is_action)
             {
-                //選択位置を決める
-                select_pos = p_pos + GetDirectionPM();
-                Vector3 pos = new Vector3(select_pos.x + 0.5f, select_pos.y + 0.5f, 0);
                 //見た目変更
                 selectTile.SetActive(true);
                 selectTile.transform.position = pos;
             }
             else
-            {
-                select_pos = p_pos;
                 selectTile.SetActive(false);
-            }
+
         }
         else//どこでも開けられる
         {
@@ -74,8 +61,6 @@ public class InputManager : MonoBehaviour
             selectTile.transform.position = pos;
         }
 
-        //id取得
-        select_id = stageManager.GetTileId(select_pos);
 
         //入力処理
         {
@@ -86,72 +71,37 @@ public class InputManager : MonoBehaviour
             //ベクトル設定
             playerMove.StartMove(input_vec);
 
-
-            //ブロックを開ける
-            if (Input.GetMouseButtonDown(0))
+            //攻撃
+            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
             {
-                switch (select_id)
+                if (on_open_frontonly)
+                    playerMove.Attack();
+                else
                 {
-                    case ObjId.BLOCK:
-                    case ObjId.MINE:
-                        //マウス位置のブロックを開く
-                        if (stageManager.OpenBlock(select_pos))
-                        {
-                            //開けたら状態保存
-                            EndAction();
-                        }
-                        break;
+                    //id取得
+                    select_id = stageManager.GetTileId(select_pos);
 
-                    case ObjId.EMPTY:
-                        //数字がある時のみ実行
-                        if (stageManager.GetMineCount(select_pos) <= 0) break;
-
-                        is_hold_clickL = true;//クリック状態切り替え
-                        start_pos_clickL = select_pos;//クリック位置保存
-                        break;            
+                    if (select_id == ObjId.BLOCK || select_id == ObjId.MINE)
+                    {
+                        stageManager.OpenBlock(GetIntMousePos());
+                        EndAction();
+                    }
                 }
-                
-            }
-            else if(Input.GetMouseButtonUp(0))
-            {
-                is_hold_clickL = false;//クリック状態切り替え
             }
 
             //旗設置切り替え  
             if(Input.GetMouseButtonDown(1))
             {
                 stageManager.SwitchFlag(select_pos);
+            } 
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                stageManager.SwitchFlag(playerMove.attack_target_pos);
             }
 
             //アンドゥ
             if (Input.GetKeyDown(KeyCode.R))
                 saveData.SetMemento(saveData.GetMementoEnd() - 1);
-        }
-
-        //長押し処理 没になるかも
-        {
-            if (is_hold_clickL &&
-                start_pos_clickL == select_pos) //押し始めた位置と現在の位置が同じ    
-            {
-                //時間カウント
-                time_hold_clickL += Time.deltaTime;           
-            }
-            else
-            {
-                //時間リセット
-                time_hold_clickL = 0.0f;
-                //長押し解除
-                is_hold_clickL = false;
-            }
-            //成立したときの処理
-            if(time_hold_clickL >= hold_sec)
-            {
-                //リセット
-                is_hold_clickL = false;
-                time_hold_clickL = 0.0f;
-
-                Debug.Log("実行");
-            }
         }
 
     }

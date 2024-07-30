@@ -12,6 +12,7 @@ public enum ObjId
     MINE,   //地雷
     FLAG,   //旗
     HOLE,   //穴
+    GOAL,   //ゴール
 }
 
 //ステージデータクラス
