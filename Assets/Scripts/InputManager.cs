@@ -29,9 +29,7 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         saveData.CreateMemento();
-
     }
-
 
     // Update is called once per frame
     void Update()
