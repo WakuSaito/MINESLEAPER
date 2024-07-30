@@ -24,7 +24,8 @@ public class StageManager : MonoBehaviour
     StageData stage = new StageData();      //ステージのブロックデータ
     StageData stage_flag = new StageData(); //ステージの旗データ
 
-    PlayerMove playerMove;//プレイヤースクリプト
+    CreateStage createStage;//ステージ作成スクリプト
+    PlayerMove playerMove;  //プレイヤースクリプト
 
     const int BLOCK_EMPTY = 0;//空のID
     const int BLOCK_MINE = 9; //地雷のID
@@ -83,10 +84,11 @@ public class StageManager : MonoBehaviour
     private void Awake()
     {
         //スクリプト取得
+        createStage = gameObject.GetComponent<CreateStage>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
 
         //ステージのブロックデータ取得
-        GetAllBlockData();
+        stage = createStage.GetAllBlockData();
 
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
@@ -94,6 +96,17 @@ public class StageManager : MonoBehaviour
             if (data.Value != ObjId.EMPTY) continue;//空白部分のみ数字を出す
 
             UpdateTileNum(data.Key);//更新
+        }
+        if (on_changemine)//地雷置き換え
+        {           
+            foreach (var pos in under_tilemap.cellBounds.allPositionsWithin)
+            {
+                //その位置にタイルが無ければ処理しない
+                if (!under_tilemap.HasTile(pos)) continue;
+
+                //ブロックタイルを重ねるように設置
+                block_tilemap.SetTile(pos, tile_block);
+            }
         }
     }
 
@@ -115,8 +128,8 @@ public class StageManager : MonoBehaviour
         if (block_id != ObjId.BLOCK && 
             block_id != ObjId.MINE) return false;
         //旗が設置していれば
-        if (!_flag_open && 
-            stage_flag.GetData(_pos) == ObjId.FLAG) return false;
+        //if (!_flag_open && 
+        //    stage_flag.GetData(_pos) == ObjId.FLAG) return false;
 
         DeleteFlag(_pos);//旗削除
 
@@ -161,7 +174,8 @@ public class StageManager : MonoBehaviour
             //周囲にプレイヤーがいた場合
             if(pos == p_pos)
             {
-                playerMove.StartLeap(_pos);//ふっとばし
+                int num = GetMineCount(p_pos)+1;//足元の数字を取得
+                playerMove.StartLeap(_pos, num);//その分ふっとばし
             }
 
             ObjId id = stage.GetData(pos);
@@ -250,55 +264,6 @@ public class StageManager : MonoBehaviour
         return mine_count;
     }
 
-    //全タイルのブロック情報を取得
-    private void GetAllBlockData()
-    {
-        //ブロックの情報取得
-        foreach (var pos in block_tilemap.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!block_tilemap.HasTile(pos)) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.BLOCK);
-        }
-        //地雷の位置情報取得
-        foreach (var pos in under_tilemap.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!under_tilemap.HasTile(pos)) continue;
-
-            if (on_changemine)
-                //ブロックタイルを重ねるように設置
-                block_tilemap.SetTile(pos, tile_block);
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.MINE);
-        }
-        //壁の情報取得
-        foreach (var pos in wall_tilemap.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!wall_tilemap.HasTile(pos)) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.WALL);
-        }
-        //地面の情報取得
-        foreach (var pos in ground_tilemap.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!ground_tilemap.HasTile(pos)) continue;
-            //すでに他のデータがあるなら処理しない
-            if (stage.GetData((Vector2Int)pos) != ObjId.NULL) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.EMPTY);
-        }
-    }
-
-  
-
     public ObjId GetTileId(Vector2Int _pos)
     {
         return stage.GetData(_pos);
@@ -318,7 +283,7 @@ public class StageManager : MonoBehaviour
         
         
         //移動先が空白以外
-        if(next_id != ObjId.EMPTY || next_id != ObjId.HOLE)
+        if(next_id != ObjId.EMPTY && next_id != ObjId.HOLE)
         {
             //移動先のブロックを押す
             if (!PushBlock(next_pos, _vec)) return false;
@@ -379,7 +344,7 @@ public class StageManager : MonoBehaviour
         return true;
     }
 
-    //ステージデータ記録
+    //ステージデータ記録 変更点のみ保存してもいいかも
     public StageMemento CreateMemento()
     {
         var memento = new StageMemento();
