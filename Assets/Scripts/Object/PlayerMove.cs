@@ -121,7 +121,7 @@ public class PlayerMove : ObjBase
         //Leapアニメーション
         var seq = DOTween.Sequence();
         seq.Append(transform.DOMove(target_pos, 0.8f));//移動
-        seq.Join(transform.DOScale(Vector3.one * 1.1f, 0.4f).SetLoops(2, LoopType.Yoyo));//サイズ変更
+        seq.Join(transform.DOScale(Vector3.one * 1.0f, 0.4f).SetLoops(2, LoopType.Yoyo));//サイズ変更
         seq.Play().OnComplete(() =>
          {//終了処理
              is_action = false;
