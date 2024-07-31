@@ -63,10 +63,11 @@ public class PlayerMove : ObjBase
         Vector2Int pos = GetIntPos();
         //移動先座標
         Vector2 target_pos = (Vector2)transform.position + _vec;
+        Vector2Int target_int_pos = pos + _vec;
 
         //移動先探索
-        ObjId id = stageManager.GetTileId(GetIntPos(target_pos));
-        Debug.Log("移動先id:" + id + ":" + target_pos);
+        ObjId id = stageManager.GetTileId(target_int_pos);
+        Debug.Log("移動先id:" + id + ":" + target_int_pos);
         if (id != ObjId.EMPTY)
         {
             //ブロックを押す
@@ -215,30 +216,6 @@ public class PlayerMove : ObjBase
             return Vector2Int.zero;
     }
 
-    //Vector2Int型の座標を返す関数
-    public Vector2Int GetIntPos()
-    {
-        Vector2 pos = transform.position;
-        //無理やり0以下でも問題が起きないようにする
-        if (pos.x < 0) pos.x -= 0.9999f;
-        if (pos.y < 0) pos.y -= 0.9999f;
-        //intに変換
-        Vector2Int int_pos = new Vector2Int((int)pos.x, (int)pos.y);
-
-        return int_pos;
-    }
-    //引数をint型に変換
-    public Vector2Int GetIntPos(Vector2 _pos)
-    {
-        Vector2 pos = _pos;
-        //無理やり0以下でも問題が起きないようにする
-        if (pos.x < 0) pos.x -= 0.9999f;
-        if (pos.y < 0) pos.y -= 0.9999f;
-        //intに変換
-        Vector2Int int_pos = new Vector2Int((int)pos.x, (int)pos.y);
-
-        return int_pos;
-    }
 
     public PlayerMemento CreateMemento()
     {
