@@ -28,9 +28,6 @@ public class StageManager : MonoBehaviour
     PlayerMove playerMove;  //プレイヤースクリプト
     SaveData saveData;      //セーブデータスクリプト
 
-    const int BLOCK_EMPTY = 0;//空のID
-    const int BLOCK_MINE = 9; //地雷のID
-
     [SerializeField, Header("爆弾を置き換える(デバッグ用)")]
     bool on_changemine = true;
     [SerializeField, Header("空白ブロックが連続で開く(デバッグ用)")]
@@ -60,6 +57,7 @@ public class StageManager : MonoBehaviour
     [SerializeField]//誘爆の待ち時間
     float chain_explo_delay = 0.3f;
 
+    int current_stage = 1;//現在のステージ
 
     //周囲の座標
     readonly Vector2Int[] surround_pos = 
@@ -92,11 +90,18 @@ public class StageManager : MonoBehaviour
 
     private void Start()
     {
-        stage = createStage.GetStageFileData(1);
-        if(stage == null)
-        //ステージのブロックデータ取得
-            stage = createStage.GetAllBlockData();
+        ChangeStage(1);//ステージ1を呼び出し      
+    }
 
+    //ステージ変更
+    public void ChangeNextStage()
+    {
+        ChangeStage(current_stage + 1);
+    }
+    public void ChangeStage(int _num)
+    {
+        current_stage = _num;
+        stage = createStage.GetStageFileData(current_stage);
         createStage.SetAllBlockData(stage);
 
         //全空白の数字を更新
@@ -117,7 +122,7 @@ public class StageManager : MonoBehaviour
                 block_tilemap.SetTile(pos, tile_block);
             }
         }
-
+        saveData.ResetMemento();//リセット
         saveData.CreateMemento();//データ保存
     }
 

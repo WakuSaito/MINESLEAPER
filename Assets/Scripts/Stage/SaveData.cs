@@ -70,4 +70,10 @@ public class SaveData : MonoBehaviour
     {
         return memento_data.Count - 1;
     }
+
+    //デ－タリセット
+    public void ResetMemento()
+    {
+        memento_data.Clear();
+    }
 }
