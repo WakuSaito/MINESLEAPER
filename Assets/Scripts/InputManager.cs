@@ -26,10 +26,6 @@ public class InputManager : MonoBehaviour
         saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
     }
 
-    private void Start()
-    {
-        saveData.CreateMemento();
-    }
 
     // Update is called once per frame
     void Update()
@@ -81,11 +77,9 @@ public class InputManager : MonoBehaviour
                     //id取得
                     select_id = stageManager.GetTileId(select_pos);
 
-                    if (select_id == ObjId.BLOCK || select_id == ObjId.MINE)
-                    {
-                        stageManager.OpenBlock(GetIntMousePos());
+                    //ブロックを開ける
+                    if (stageManager.OpenBlock(GetIntMousePos()))
                         EndAction();
-                    }
                 }
             }
 

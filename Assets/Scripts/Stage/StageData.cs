@@ -6,7 +6,7 @@ using UnityEngine;
 public enum ObjId
 {
     NULL=-1,//存在しない
-    EMPTY=0,//空白
+    EMPTY=0,//空白(床)
     WALL,   //壁
     BLOCK,  //何もないブロック
     MINE,   //地雷

@@ -26,6 +26,7 @@ public class StageManager : MonoBehaviour
 
     CreateStage createStage;//ステージ作成スクリプト
     PlayerMove playerMove;  //プレイヤースクリプト
+    SaveData saveData;      //セーブデータスクリプト
 
     const int BLOCK_EMPTY = 0;//空のID
     const int BLOCK_MINE = 9; //地雷のID
@@ -86,9 +87,17 @@ public class StageManager : MonoBehaviour
         //スクリプト取得
         createStage = gameObject.GetComponent<CreateStage>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+    }
 
+    private void Start()
+    {
+        stage = createStage.GetStageFileData(1);
+        if(stage == null)
         //ステージのブロックデータ取得
-        stage = createStage.GetAllBlockData();
+            stage = createStage.GetAllBlockData();
+
+        createStage.SetAllBlockData(stage);
 
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
@@ -98,7 +107,7 @@ public class StageManager : MonoBehaviour
             UpdateTileNum(data.Key);//更新
         }
         if (on_changemine)//地雷置き換え
-        {           
+        {
             foreach (var pos in under_tilemap.cellBounds.allPositionsWithin)
             {
                 //その位置にタイルが無ければ処理しない
@@ -108,6 +117,8 @@ public class StageManager : MonoBehaviour
                 block_tilemap.SetTile(pos, tile_block);
             }
         }
+
+        saveData.CreateMemento();//データ保存
     }
 
 
@@ -359,28 +370,8 @@ public class StageManager : MonoBehaviour
     {
         stage = memento.stageData;
 
-        //タイル配置し直し
-        foreach(var data in stage.data)
-        {
-            switch (data.Value)
-            {
-                case ObjId.EMPTY:
-                    block_tilemap.SetTile((Vector3Int)data.Key, null);
-                    under_tilemap.SetTile((Vector3Int)data.Key, null);
-                    break;
-                case ObjId.BLOCK:
-                    block_tilemap.SetTile((Vector3Int)data.Key, tile_block);
-                    under_tilemap.SetTile((Vector3Int)data.Key, null);
-                    break;
-                case ObjId.MINE:
-                    if(!on_changemine)
-                        block_tilemap.SetTile((Vector3Int)data.Key, null);
-                    else
-                        block_tilemap.SetTile((Vector3Int)data.Key, tile_block);
-                    under_tilemap.SetTile((Vector3Int)data.Key, tile_mine);
-                    break;
-            }
-        }
+        createStage.SetAllBlockData(stage);
+
         foreach(var data in stage_flag.data)
         {
             if(data.Value == ObjId.FLAG)
