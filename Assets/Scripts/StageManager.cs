@@ -90,7 +90,7 @@ public class StageManager : MonoBehaviour
 
     private void Start()
     {
-        ChangeStage(1);//ステージ1を呼び出し      
+        ChangeStage(1);//ステージ1を呼び出し
     }
 
     //ステージ変更
@@ -103,6 +103,8 @@ public class StageManager : MonoBehaviour
         current_stage = _num;
         stage = createStage.GetStageFileData(current_stage);
         createStage.SetAllBlockData(stage);
+        
+        playerMove.UpdateAttackTarget();
 
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
@@ -124,6 +126,12 @@ public class StageManager : MonoBehaviour
         }
         saveData.ResetMemento();//リセット
         saveData.CreateMemento();//データ保存
+    }
+
+    //クリア処理
+    public void Clear()
+    {
+        ChangeNextStage();
     }
 
 
@@ -202,12 +210,12 @@ public class StageManager : MonoBehaviour
                 block_tilemap.SetTile((Vector3Int)pos, null);//ブロックの削除 位置を変更する可能性アリ
 
                 // コルーチンの起動
-                StartCoroutine(DelayCoroutine(chain_explo_delay, () =>
-                {
+                //StartCoroutine(DelayCoroutine(chain_explo_delay, () =>
+                //{
                     Debug.Log("誘爆");
                     // 3秒後にここの処理が実行される
                     OpenBlock(pos);//爆発処理
-                }));
+                //}));
                 continue;
             }
             //ブロックは開く

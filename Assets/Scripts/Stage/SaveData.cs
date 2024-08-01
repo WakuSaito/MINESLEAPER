@@ -10,6 +10,7 @@ public class StageMemento
 public class PlayerMemento
 {
     public Vector3 position;
+    public Direction direction;
 }
 
 public class Memento

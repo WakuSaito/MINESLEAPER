@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
+
 //方向
 public enum Direction
 {
@@ -20,6 +21,8 @@ public class PlayerMove : ObjBase
     StageManager stageManager;
     SaveData saveData;
 
+    Animator animator;
+
     [SerializeField]//爆発での移動距離
     float move_length = 3.0f;
     [SerializeField]//爆風を受けられる距離
@@ -29,6 +32,7 @@ public class PlayerMove : ObjBase
     int leap_distance = 3;
 
     public bool is_action; //行動中フラグ
+    bool is_leap = false;
 
     //攻撃対象の情報
     public Vector2Int attack_target_pos;
@@ -43,9 +47,19 @@ public class PlayerMove : ObjBase
     private void Awake()
     {
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
-        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
-        UpdateAttackTarget();
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();        
+
+        animator = gameObject.GetComponent<Animator>();
     }
+
+    public void EndAction()
+    {
+        if (!is_action) return;
+
+        saveData.CreateMemento();
+        is_action = false;
+    }
+
 
     //移動開始
     public bool StartMove(Vector2Int _vec)
@@ -68,7 +82,7 @@ public class PlayerMove : ObjBase
         //移動先探索
         ObjId id = stageManager.GetTileId(target_int_pos);
         Debug.Log("移動先id:" + id + ":" + target_int_pos);
-        if (id != ObjId.EMPTY)
+        if (id != ObjId.EMPTY && id != ObjId.GOAL && id != ObjId.HOLE)
         {
             //ブロックを押す
             if (on_canpush)
@@ -84,18 +98,45 @@ public class PlayerMove : ObjBase
         //移動
         Move(target_pos, () =>
         {//終了時処理
-            is_action = false;
-            saveData.CreateMemento();//状態保存
+            if(!CheckFloor())//足元チェック
+                EndAction();
             UpdateAttackTarget();
         });
 
         return true;
     }
 
+
+    //ゴール処理
+    private bool CheckFloor()
+    {
+        Vector2Int p_pos = GetIntPos();
+        ObjId id = stageManager.GetTileId(p_pos);
+        if (id == ObjId.GOAL)//ゴール処理
+        {
+            is_action = true;
+            //アニメーション
+            animator.SetTrigger("Goal");
+
+            return true;
+        }
+        else if (id == ObjId.HOLE)//落ちる処理
+        {
+            is_action = true;
+            //アニメーション
+            animator.SetTrigger("Fall");
+
+            return true;
+        }
+        else
+            return false;
+        
+    }
+
     //ふっとばし（爆心地）
     public void StartLeap(Vector2Int _hypocenter, int _power)
     {
-        if (is_action) return;
+        if (is_action) return;       
 
         leap_distance = _power;
         Debug.Log(_power);
@@ -118,15 +159,14 @@ public class PlayerMove : ObjBase
                 target_pos += vec;
         }
         is_action = true;
-        
+        is_leap = true;
+
         //Leapアニメーション
         var seq = DOTween.Sequence();
         seq.Append(transform.DOMove(target_pos, 0.8f));//移動
         seq.Join(transform.DOScale(Vector3.one * 1.0f, 0.4f).SetLoops(2, LoopType.Yoyo));//サイズ変更
         seq.Play().OnComplete(() =>
          {//終了処理
-             is_action = false;
-             saveData.CreateMemento();//状態保存
              landing();//着地処理
              UpdateAttackTarget();
          });
@@ -136,6 +176,9 @@ public class PlayerMove : ObjBase
     private void landing()
     {
         Debug.Log("着地");
+
+        if (CheckFloor()) return;//足元チェック
+
         Vector2Int p_pos = GetIntPos();
         //着地地点のid取得
         ObjId id = stageManager.GetTileId(p_pos);
@@ -143,12 +186,16 @@ public class PlayerMove : ObjBase
         {
             stageManager.OpenBlock(p_pos);
         }
-        if (id == ObjId.MINE)//地雷なら前回と同じ方向に吹っ飛ぶ
+        else if (id == ObjId.MINE)//地雷なら前回と同じ方向に吹っ飛ぶ
         {
             Vector2Int hypo_pos = p_pos + (GetDirectionVec() * -1);
             StartLeap(hypo_pos, leap_distance);
             stageManager.OpenBlock(p_pos);
+            return;
         }
+
+        is_leap = false;
+        EndAction();
     }
 
     //前方に攻撃
@@ -162,7 +209,9 @@ public class PlayerMove : ObjBase
         if(stageManager.OpenBlock(attack_target_pos))
         {
             UpdateAttackTarget();//情報更新
-            saveData.CreateMemento();//保存
+            if (!is_leap)
+                saveData.CreateMemento();
+
             return true;
         }
         else//壊せなかった場合
@@ -179,7 +228,16 @@ public class PlayerMove : ObjBase
     }
     public override void Fall()
     {
+        EndAction();
+    }
 
+    public void Goal()
+    {
+        EndAction();
+        animator.SetTrigger("Default");
+
+        //終了時に実行させたい
+        stageManager.Clear();
     }
 
     public void UpdateAttackTarget()
@@ -222,6 +280,7 @@ public class PlayerMove : ObjBase
         //Debug.Log("PlayerMementoの作成");
         var memento = new PlayerMemento();
         memento.position = transform.position;
+        memento.direction = direction;
         return memento;
     }
 
@@ -229,5 +288,9 @@ public class PlayerMove : ObjBase
     {
         //Debug.Log("PlayerMementoの呼び出し" + memento.position);
         transform.position = memento.position;
+        direction = memento.direction;
+        is_action = false;
+        animator.SetTrigger("Default");
+        UpdateAttackTarget();
     }
 }
