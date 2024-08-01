@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField, Header("プレーヤーの前方のみ開けられる(デバッグ用)")]
-    bool on_open_frontonly = true;
 
     StageManager stageManager;
     PlayerMove playerMove;
     SaveData saveData;
+
+    MenuUI menuUI;
+
+    DebugMan debugMan;
 
     [SerializeField] GameObject selectTile;
  
@@ -24,6 +26,10 @@ public class InputManager : MonoBehaviour
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
         saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+
+        menuUI = GameObject.Find("MenuUI").GetComponent<MenuUI>();
+
+        debugMan = GameObject.Find("DebugMan").GetComponent<DebugMan>();
     }
 
 
@@ -33,7 +39,7 @@ public class InputManager : MonoBehaviour
         Vector2Int p_pos = playerMove.GetIntPos();//プレイヤー座標取得
 
         //選択ブロックを決める
-        if (on_open_frontonly)//通常
+        if (!debugMan.on_open_anywhere)//通常
         {
             //選択位置を決める
             select_pos = playerMove.attack_target_pos;
@@ -57,11 +63,27 @@ public class InputManager : MonoBehaviour
             selectTile.transform.position = pos;
         }
 
-
-        if (playerMove.is_action) return;
-
-        //入力処理
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if(!menuUI.is_animation)//メニューがアニメーション中で無い
+            {
+                if (menuUI.is_active)//表示非表示を切り替え
+                    menuUI.CloseUI();
+                else
+                    menuUI.OpenUI();
+            }      
+        }
+
+        //メニュー操作
+        if(menuUI.is_active)
+        {
+
+        }
+        //入力処理
+        else 
+        {
+            if (playerMove.is_action) return;
+
             //プレイヤーの移動
             Vector2Int input_vec = new Vector2Int();
             input_vec.x = (int)Input.GetAxisRaw("Horizontal");
@@ -72,16 +94,11 @@ public class InputManager : MonoBehaviour
             //攻撃
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
             {
-                if (on_open_frontonly)
-                    playerMove.Attack();
+                if (debugMan.on_open_anywhere)//どこでも開けられる
+                    playerMove.AttackPos(select_pos);
                 else
                 {
-                    //id取得
-                    select_id = stageManager.GetTileId(select_pos);
-
-                    //ブロックを開ける
-                    if (stageManager.OpenBlock(GetIntMousePos()))
-                        EndAction();
+                    playerMove.Attack();
                 }
             }
 
@@ -102,44 +119,6 @@ public class InputManager : MonoBehaviour
 
     }
 
-    //何か行動を終えたら呼ばれる
-    private void EndAction()
-    {
-        //状態保存
-        saveData.CreateMemento();
-    }
-
-
-    //プレイヤーからマウスまでの方向を取得
-    private Vector2Int GetDirectionPM()
-    {
-        //座標取得
-        Vector2 p_pos = playerMove.gameObject.transform.position;
-        Vector2 m_pos = GetMousePos();
-        //プレイヤーからマウスまでのベクトル
-        Vector2 vec = m_pos - p_pos;
-        vec.Normalize();
-        //方向
-        Vector2Int direction = new Vector2Int();
-
-        //無理やり変換
-        if (vec.x >= 0.4f) direction.x = 1;
-        else if (vec.x <= -0.4f) direction.x = -1;
-        else direction.x = 0;
-        if (vec.y >= 0.4f) direction.y = 1;
-        else if (vec.y <= -0.4f) direction.y = -1;
-        else direction.y = 0;
-
-        return direction;
-    }
-
-    public Vector2 GetMousePos()
-    {
-        Vector3 pos = Input.mousePosition;
-        pos = Camera.main.ScreenToWorldPoint(pos);
-
-        return pos;
-    }
 
     //マウスの座標取得
     public Vector2Int GetIntMousePos()

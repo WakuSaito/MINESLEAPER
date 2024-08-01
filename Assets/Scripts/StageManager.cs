@@ -28,10 +28,8 @@ public class StageManager : MonoBehaviour
     PlayerMove playerMove;  //プレイヤースクリプト
     SaveData saveData;      //セーブデータスクリプト
 
-    [SerializeField, Header("爆弾を置き換える(デバッグ用)")]
-    bool on_changemine = true;
-    [SerializeField, Header("空白ブロックが連続で開く(デバッグ用)")]
-    bool on_areaopen = true;
+    DebugMan debugMan;//デバッグ用フラグ
+
 
     [SerializeField]//旗のタイルマップ
     Tilemap flag_tilemap;
@@ -58,6 +56,7 @@ public class StageManager : MonoBehaviour
     float chain_explo_delay = 0.3f;
 
     int current_stage = 1;//現在のステージ
+    int deepest_stage = 1;//たどり着いたことのある最奥のステージ
 
     //周囲の座標
     readonly Vector2Int[] surround_pos = 
@@ -86,6 +85,8 @@ public class StageManager : MonoBehaviour
         createStage = gameObject.GetComponent<CreateStage>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
         saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+
+        debugMan = GameObject.Find("DebugMan").GetComponent<DebugMan>();
     }
 
     private void Start()
@@ -100,10 +101,13 @@ public class StageManager : MonoBehaviour
     }
     public void ChangeStage(int _num)
     {
-        current_stage = _num;
+        current_stage = _num;//現在のステージの更新
+        if (deepest_stage < current_stage) 
+            deepest_stage = current_stage;//最奥の更新
         stage = createStage.GetStageFileData(current_stage);
         createStage.SetAllBlockData(stage);
-        
+
+        playerMove.SetDirection(Vector2Int.down);//プレイヤーの向き変更
         playerMove.UpdateAttackTarget();
 
         //全空白の数字を更新
@@ -113,17 +117,7 @@ public class StageManager : MonoBehaviour
 
             UpdateTileNum(data.Key);//更新
         }
-        if (on_changemine)//地雷置き換え
-        {
-            foreach (var pos in under_tilemap.cellBounds.allPositionsWithin)
-            {
-                //その位置にタイルが無ければ処理しない
-                if (!under_tilemap.HasTile(pos)) continue;
-
-                //ブロックタイルを重ねるように設置
-                block_tilemap.SetTile(pos, tile_block);
-            }
-        }
+        
         saveData.ResetMemento();//リセット
         saveData.CreateMemento();//データ保存
     }
@@ -170,7 +164,7 @@ public class StageManager : MonoBehaviour
         block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
 
         //連続して開ける
-        if (block_id == ObjId.BLOCK && GetMineCount(_pos) == 0 && on_areaopen)
+        if (block_id == ObjId.BLOCK && GetMineCount(_pos) == 0 && debugMan.on_areaopen)
         {
             //周囲4マスを探索
             for (int i = 0; i < surround4_pos.Length; i++)
@@ -336,7 +330,7 @@ public class StageManager : MonoBehaviour
         if (next_id != ObjId.HOLE)
         {
             //移動先画像変更
-            if (!on_changemine && id == ObjId.MINE)
+            if (debugMan.on_visiblemine && id == ObjId.MINE)
                 block_tilemap.SetTile((Vector3Int)next_pos, tile_mine);
             else
                 block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
