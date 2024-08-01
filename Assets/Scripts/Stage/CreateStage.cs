@@ -8,6 +8,8 @@ public class CreateStage : MonoBehaviour
 {
     GameObject player;//プレイヤーオブジェクト
 
+    DebugMan debugMan;
+
     //グリッド（タイルマップの親）
     Grid grid;
     //ブロックのタイルマップ
@@ -57,6 +59,8 @@ public class CreateStage : MonoBehaviour
         tilemap_under = GameObject.Find("UnderBlockTilemap").GetComponent<Tilemap>();
         tilemap_wall  = GameObject.Find("WallTilemap").GetComponent<Tilemap>();
         tilemap_ground =GameObject.Find("GroundTilemap").GetComponent<Tilemap>();
+
+        debugMan = GameObject.Find("DebugMan").GetComponent<DebugMan>();
     }
 
     //ファイルからステージ情報を取得
@@ -105,8 +109,11 @@ public class CreateStage : MonoBehaviour
                 if (column >= csvData[row].Length) break;//データがなければとばす
 
                 int x = MAP_MIN_X + column + firstpos.x;//x取得
-                
-                int num = int.Parse(csvData[row][column]);//csvの数値取得
+
+                int num;//数字を取得
+                if (!int.TryParse(csvData[row][column], out num))
+                    num = -1;//数字が取得できない場合は-1を入れる
+
                 ObjId id;//id
                 switch (num)//csvのデータをidに変換
                 {
@@ -124,6 +131,7 @@ public class CreateStage : MonoBehaviour
                         id = ObjId.EMPTY;
                         player.transform.position = new Vector2(x + 0.5f, y + 0.5f);
                         break;
+                    case -1:
                     default:
                         id = ObjId.HOLE; break;
                 }
@@ -171,6 +179,8 @@ public class CreateStage : MonoBehaviour
                 case ObjId.MINE:
                     tilemap_ground.SetTile(posint, tile_floor);
                     tilemap_under.SetTile(posint, tile_mine);
+                    if(!debugMan.on_visiblemine)
+                        tilemap_block.SetTile(posint, tile_block);
                     //Instantiate(tile_mine, pos, Quaternion.identity, mine_parent.transform);
                     break;
                 case ObjId.HOLE:

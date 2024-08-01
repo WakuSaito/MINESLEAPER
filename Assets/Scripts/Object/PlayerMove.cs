@@ -15,9 +15,6 @@ public enum Direction
 
 public class PlayerMove : ObjBase
 {
-    [SerializeField, Header("ブロックを押せる(デバッグ用)")]
-    bool on_canpush = true;
-
     StageManager stageManager;
     SaveData saveData;
 
@@ -84,13 +81,7 @@ public class PlayerMove : ObjBase
         Debug.Log("移動先id:" + id + ":" + target_int_pos);
         if (id != ObjId.EMPTY && id != ObjId.GOAL && id != ObjId.HOLE)
         {
-            //ブロックを押す
-            if (on_canpush)
-            {
-                if (!stageManager.PushBlock(pos + _vec, _vec))
-                    return false;
-            }
-            else
+            if (!stageManager.PushBlock(pos + _vec, _vec))
                 return false;//移動しない
         }
 
@@ -218,9 +209,23 @@ public class PlayerMove : ObjBase
         {
             return false;
         }
-       
     }
+    public bool AttackPos(Vector2Int _pos)//デバッグ用
+    {
+        //ブロックを壊す
+        if (stageManager.OpenBlock(_pos))
+        {
+            UpdateAttackTarget();//情報更新
+            if (!is_leap)
+                saveData.CreateMemento();
 
+            return true;
+        }
+        else//壊せなかった場合
+        {
+            return false;
+        }
+    }
 
     public override void Broken()
     {
@@ -247,7 +252,7 @@ public class PlayerMove : ObjBase
         attack_target_id = stageManager.GetTileId(attack_target_pos);
     }
 
-    private void SetDirection(Vector2Int _vec)
+    public void SetDirection(Vector2Int _vec)
     {
         if (_vec == Vector2Int.up)
             direction = Direction.UP;
