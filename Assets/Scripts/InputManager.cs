@@ -58,6 +58,8 @@ public class InputManager : MonoBehaviour
         }
 
 
+        if (playerMove.is_action) return;
+
         //“ü—Íˆ—
         {
             //ƒvƒŒƒCƒ„[‚ÌˆÚ“®

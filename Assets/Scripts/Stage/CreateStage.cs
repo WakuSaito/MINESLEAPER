@@ -24,6 +24,8 @@ public class CreateStage : MonoBehaviour
     TileBase tile_floor;
     [SerializeField]//•Ç
     TileBase tile_wall;
+    [SerializeField]//ƒS[ƒ‹
+    TileBase tile_goal;
     [SerializeField]//ƒuƒƒbƒN íœ—\’è
     TileBase tile_block;
     [SerializeField]//”š’e@íœ—\’è
@@ -159,6 +161,7 @@ public class CreateStage : MonoBehaviour
                     tilemap_wall.SetTile(posint, tile_wall);
                     break;
                 case ObjId.GOAL:
+                    tilemap_ground.SetTile(posint, tile_goal);
                     break;
                 case ObjId.BLOCK:
                     tilemap_ground.SetTile(posint, tile_floor);

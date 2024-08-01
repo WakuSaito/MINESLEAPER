@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57ddbafb70d37384e8e409cce139c821, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  on_open_frontonly: 0
+  on_open_frontonly: 1
   selectTile: {fileID: 719345608}
 --- !u!4 &250289442
 Transform:
@@ -2237,6 +2237,7 @@ GameObject:
   - component: {fileID: 1473045800}
   - component: {fileID: 1473045796}
   - component: {fileID: 1473045795}
+  - component: {fileID: 1473045801}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2391,6 +2392,27 @@ MonoBehaviour:
   is_action: 0
   attack_target_pos: {x: 0, y: 0}
   moveSpeed: 8
+--- !u!95 &1473045801
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473045794}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 14dd6092e8df7a04ba2bb7c9d54c8fbc, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1508675217
 GameObject:
   m_ObjectHideFlags: 0
@@ -2471,6 +2493,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tile_floor: {fileID: 11400000, guid: 12479b64fefafaf479386d79f35c72b3, type: 2}
   tile_wall: {fileID: 11400000, guid: e8e8258ac9e5fdf47b739e6bcc0002d9, type: 2}
+  tile_goal: {fileID: 11400000, guid: 7b550b4176ff17140b360a29102a09a8, type: 2}
   tile_block: {fileID: 11400000, guid: 7836077ade5f4a94b9ac8f5bc651838b, type: 2}
   tile_mine: {fileID: 11400000, guid: 0eca728b64a1bd54aa9d0afa594998a4, type: 2}
   tile_flag: {fileID: 11400000, guid: 5724dfd7ba4bd7f4aadc32652b4fccb3, type: 2}
