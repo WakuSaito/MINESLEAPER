@@ -75,9 +75,12 @@ public class InputManager : MonoBehaviour
         }
 
         //ƒƒjƒ…[‘€ì
-        if(menuUI.is_active)
+        if(menuUI.is_active && !menuUI.is_animation)
         {
-
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                menuUI.SelectButton();
+            }
         }
         //“ü—Íˆ—
         else 

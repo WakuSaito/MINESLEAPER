@@ -62,27 +62,17 @@ public class MenuUI : MonoBehaviour
 
                     ui_button.GetComponent<CanvasGroup>().alpha = 1;
                     ui_stage.GetComponent<CanvasGroup>().alpha = 1;
-                    //// RESTARTボタンを選択状態にする
-                    //if (ui_reset_button.TryGetComponent<Selectable>(out var sr))
-                    //{
-                    //    // Selectableを取得
-                    //    Selectable mySelectable = sr;
-
-                    //    // 一つ下のオブジェクトを選択
-                    //    EventSystem.current.SetSelectedGameObject(mySelectable.navigation.selectOnDown.gameObject);
-                    //}
+                    
                 }));
             }));
-        }
-
-        
-
-        
+        }        
     }
+
     //メニューを閉じる
     public void CloseUI()
     {
         is_animation = true;
+        EventSystem.current.SetSelectedGameObject(null);
 
         //アニメーション
         {
@@ -99,5 +89,15 @@ public class MenuUI : MonoBehaviour
             is_active = false;
             // ui_menu.SetActive(false);
         }));     
+    }
+
+    public void SelectButton()
+    {
+        // 選択中のオブジェクト取得
+        if(!EventSystem.current.currentSelectedGameObject)
+        {
+            // 一つ下のオブジェクトを選択
+            EventSystem.current.SetSelectedGameObject(ui_reset_button);
+        }
     }
 }
