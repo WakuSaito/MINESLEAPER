@@ -9,10 +9,10 @@ public abstract class ObjBase : MonoBehaviour
     //移動（移動先座標、終了時アクション）
     public bool Move(Vector2Int _pos, Action _complete = null)
     {
-        Vector3 pos = (Vector2)_pos;
+        Vector3 pos = _pos + new Vector2(0.5f,0.5f);
 
         var seq = DOTween.Sequence();
-        seq.Append(transform.DOMove(pos, 0.5f));//移動
+        seq.Append(transform.DOMove(pos, 0.3f));//移動
         seq.Play().OnComplete(()=> {
             _complete?.Invoke();
         });

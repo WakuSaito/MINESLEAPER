@@ -24,13 +24,19 @@ public class StageManager : MonoBehaviour
     StageData stage = new StageData();      //ステージのブロックデータ
     StageData stage_flag = new StageData(); //ステージの旗データ
 
+    List<GameObject> blocks = new List<GameObject>();
+
     CreateStage createStage;//ステージ作成スクリプト
     PlayerMove playerMove;  //プレイヤースクリプト
     SaveData saveData;      //セーブデータスクリプト
 
     DebugMan debugMan;//デバッグ用フラグ
 
+    //ブロックの親オブジェクト
+    [SerializeField]
+    GameObject block_parent;
 
+    //タイルマップ
     [SerializeField]//旗のタイルマップ
     Tilemap flag_tilemap;
     [SerializeField]//ブロックのタイルマップ
@@ -110,6 +116,8 @@ public class StageManager : MonoBehaviour
         playerMove.SetDirection(Vector2Int.down);//プレイヤーの向き変更
         playerMove.UpdateAttackTarget();
 
+        FindAllBlock();
+
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
         {
@@ -161,7 +169,8 @@ public class StageManager : MonoBehaviour
             Explosion(_pos);//爆発処理
         }
 
-        block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
+        //block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
+        GetBlock(_pos).Broken();//ブロック削除
 
         //連続して開ける
         if (debugMan.on_areaopen && block_id == ObjId.BLOCK && GetMineCount(_pos) == 0)
@@ -293,6 +302,27 @@ public class StageManager : MonoBehaviour
         return stage.GetData(_pos);
     }
 
+    public Block GetBlock(Vector2Int _pos)
+    {
+        foreach(var obj in blocks)
+        {
+            if (obj == null) continue;
+
+            Block block = obj.GetComponent<Block>();
+            if (block.GetIntPos() == _pos) 
+                return block;
+        }
+        return null;
+    }
+
+    private void FindAllBlock()
+    {
+        blocks.Clear();
+        foreach(Transform obj in block_parent.transform)
+            blocks.Add(obj.gameObject);
+    }
+
+
     //ブロックを押す関数
     public bool PushBlock(Vector2Int _pos, Vector2Int _vec)
     {
@@ -318,6 +348,8 @@ public class StageManager : MonoBehaviour
         {
             DeleteFlag(_pos);
             stage.SetData(_pos, ObjId.EMPTY);
+
+            stage.SetData(next_pos, ObjId.EMPTY);//穴を地面に変える
         }
         else if (stage_flag.GetData(_pos) == ObjId.FLAG)//旗の移動
         {
@@ -332,17 +364,14 @@ public class StageManager : MonoBehaviour
             stage.Move(_pos, next_pos);
         }
 
-        //穴は変更しない　タイルの変更は関数を作成してもいいかも
-        if (next_id != ObjId.HOLE)
+
+        Block block = GetBlock(_pos);//ブロック取得
+        block.Move(next_pos);//移動
+       
+        if (next_id != ObjId.HOLE) //穴に落ちる処理
         {
-            //移動先画像変更
-            if (debugMan.on_visiblemine && id == ObjId.MINE)
-                block_tilemap.SetTile((Vector3Int)next_pos, tile_mine);
-            else
-                block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
+            block.Fall();
         }
-        //現座標画像変更
-        block_tilemap.SetTile((Vector3Int)_pos, null);
 
 
         //数字の更新
@@ -400,5 +429,8 @@ public class StageManager : MonoBehaviour
 
             UpdateTileNum(data.Key);//更新
         }
+
+        FindAllBlock();
+
     }
 }
