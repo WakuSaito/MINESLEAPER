@@ -56,7 +56,7 @@ public class StageManager : MonoBehaviour
     float chain_explo_delay = 0.3f;
 
     int current_stage = 1;//現在のステージ
-    int deepest_stage = 1;//たどり着いたことのある最奥のステージ
+    public int deepest_stage = 1;//たどり着いたことのある最奥のステージ
 
     //周囲の座標
     readonly Vector2Int[] surround_pos = 
@@ -164,7 +164,7 @@ public class StageManager : MonoBehaviour
         block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
 
         //連続して開ける
-        if (block_id == ObjId.BLOCK && GetMineCount(_pos) == 0 && debugMan.on_areaopen)
+        if (debugMan.on_areaopen && block_id == ObjId.BLOCK && GetMineCount(_pos) == 0)
         {
             //周囲4マスを探索
             for (int i = 0; i < surround4_pos.Length; i++)
@@ -182,20 +182,26 @@ public class StageManager : MonoBehaviour
     //爆発
     public void Explosion(Vector2Int _pos)
     {
-        //周囲8マスを探索
+        //周囲8マスのプレイヤーを探索
         for (int i = 0; i < surround_pos.Length; i++)
         {
             //周囲の座標
             Vector2Int pos = _pos + surround_pos[i];
             //プレイヤーの座標
             Vector2Int p_pos = playerMove.GetIntPos();
+            Debug.Log("player座標:" + p_pos);
             //周囲にプレイヤーがいた場合
-            if(pos == p_pos)
+            if (pos == p_pos)
             {
-                int num = GetMineCount(p_pos)+1;//足元の数字を取得
+                int num = GetMineCount(p_pos) + 1;//足元の数字を取得
                 playerMove.StartLeap(_pos, num);//その分ふっとばし
             }
-
+        }
+        //周囲8マスのブロックを探索
+        for (int i = 0; i < surround_pos.Length; i++)
+        {
+            //周囲の座標
+            Vector2Int pos = _pos + surround_pos[i];
             ObjId id = stage.GetData(pos);
 
             //誘爆（ワンテンポ遅らせるようにする）

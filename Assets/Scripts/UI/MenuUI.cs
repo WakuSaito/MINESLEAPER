@@ -8,8 +8,12 @@ using System;
 
 public class MenuUI : MonoBehaviour
 {
-    public bool is_active = false;
+    StageManager stageManager;
+    SaveData saveData;
 
+    //メニューが有効
+    public bool is_active = false;
+    //アニメーション中
     public bool is_animation = false;
 
     //画像UI
@@ -18,11 +22,14 @@ public class MenuUI : MonoBehaviour
     [SerializeField]
     GameObject ui_button;
     [SerializeField]
-    GameObject ui_reset_button;
-    [SerializeField]
-    GameObject ui_exit_button;
-    [SerializeField]
     GameObject ui_stage;
+
+    //ボタン
+    [SerializeField]
+    Button button_reset;
+    [SerializeField]
+    Button button_exit;
+    Button[] button_stage;//ステージボタン
 
     Animator animator_button;
     Animator animator_stage;
@@ -32,7 +39,14 @@ public class MenuUI : MonoBehaviour
         animator_button = ui_button.GetComponent<Animator>();
         animator_stage  = ui_stage.GetComponent<Animator>();
 
-        
+        stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+
+        //ステージボタンの全取得
+        button_stage = ui_stage.GetComponentsInChildren<Button>();
+
+        //ボタン無効化
+        SetIntaractable(false);
     }
 
     // 一定時間後に処理を呼び出すコルーチン
@@ -47,22 +61,21 @@ public class MenuUI : MonoBehaviour
     {
         is_active = true;
         is_animation = true;
-        //ui_menu.SetActive(true);
 
         //アニメーション
         {
+            //順番にアニメーションさせる
             animator_button.SetTrigger("StartIn");
             StartCoroutine(DelayCoroutine(0.25f, () =>
             {
                 animator_stage.SetTrigger("StartIn");
 
                 StartCoroutine(DelayCoroutine(0.4f, () =>
-                {
+                {//終了処理
                     is_animation = false;
 
-                    ui_button.GetComponent<CanvasGroup>().alpha = 1;
-                    ui_stage.GetComponent<CanvasGroup>().alpha = 1;
-                    
+                    //ボタン有効化
+                    SetIntaractable(true);
                 }));
             }));
         }        
@@ -72,7 +85,11 @@ public class MenuUI : MonoBehaviour
     public void CloseUI()
     {
         is_animation = true;
+        //選択解除
         EventSystem.current.SetSelectedGameObject(null);
+        //ボタンの無効化
+        SetIntaractable(false);
+
 
         //アニメーション
         {
@@ -81,23 +98,61 @@ public class MenuUI : MonoBehaviour
         }
 
         StartCoroutine(DelayCoroutine(0.3f, () =>
-        {
-            ui_button.GetComponent<CanvasGroup>().alpha = 0;
-            ui_stage.GetComponent<CanvasGroup>().alpha = 0;
-
+        {//終了処理
             is_animation = false;
             is_active = false;
-            // ui_menu.SetActive(false);
         }));     
     }
 
     public void SelectButton()
     {
-        // 選択中のオブジェクト取得
+        //選択中のボタンが無いなら
         if(!EventSystem.current.currentSelectedGameObject)
         {
-            // 一つ下のオブジェクトを選択
-            EventSystem.current.SetSelectedGameObject(ui_reset_button);
+            // リセットボタンを選択
+            EventSystem.current.SetSelectedGameObject(button_reset.gameObject);
         }
+    }
+    //ボタンの有効化無効化
+    private void SetIntaractable(bool _intaractable)
+    {
+        button_reset.interactable = _intaractable;
+        button_exit.interactable = _intaractable;
+        int count = 1;
+        foreach(var button in button_stage)
+        {
+            //たどり着いていないステージは無効化
+            if (count > stageManager.deepest_stage)
+            {
+                button.interactable = false; 
+            }
+            else 
+                button.interactable = _intaractable;
+            count++;
+        }
+    }
+
+    //リセット実行
+    public void OnReset()
+    {
+        Debug.Log("ステージリセット");
+        //最初の状態に戻す
+        saveData.SetMemento(0);
+
+        CloseUI();//メニューを閉じる
+    }
+
+    //ゲーム終了
+    public void OnExit()
+    {
+        Debug.Log("ゲーム終了");
+    }
+
+    //ステージ切り替え
+    public void SelectStage(int _num)
+    {
+        stageManager.ChangeStage(_num);//ステージ呼び出し
+
+        CloseUI();//メニューを閉じる
     }
 }

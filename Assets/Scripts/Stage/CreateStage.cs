@@ -150,8 +150,8 @@ public class CreateStage : MonoBehaviour
             DeleteAllBlock();
 
         //親オブジェクトが見つからなければ作成
-        if (!block_parent)
-            block_parent = new GameObject();
+        //if (!block_parent)
+        //    block_parent = new GameObject();
 
         foreach (var data in _stage.data)
         {

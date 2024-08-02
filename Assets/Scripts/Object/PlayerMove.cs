@@ -130,7 +130,7 @@ public class PlayerMove : ObjBase
         if (is_action) return;       
 
         leap_distance = _power;
-        Debug.Log(_power);
+        Debug.Log("power:"+_power+ "hypo:"+_hypocenter);
 
         Vector2Int p_pos = GetIntPos();
         Vector2Int vec = (_hypocenter - p_pos) * -1;//•ûŒü‚ğ‹‚ß‚é
@@ -179,6 +179,7 @@ public class PlayerMove : ObjBase
         }
         else if (id == ObjId.MINE)//’n—‹‚È‚ç‘O‰ñ‚Æ“¯‚¶•ûŒü‚É‚Á”ò‚Ô
         {
+            is_action = false;
             Vector2Int hypo_pos = p_pos + (GetDirectionVec() * -1);
             StartLeap(hypo_pos, leap_distance);
             stageManager.OpenBlock(p_pos);
