@@ -158,7 +158,7 @@ public class CreateStage : MonoBehaviour
             if (data.Value == ObjId.NULL) continue;
 
             Vector3Int posint = (Vector3Int)data.Key;
-            Vector3 pos = (Vector2)data.Key;
+            Vector3 pos = data.Key + new Vector2(0.5f, 0.5f);
 
             switch(data.Value)
             {
@@ -173,15 +173,15 @@ public class CreateStage : MonoBehaviour
                     break;
                 case ObjId.BLOCK:
                     tilemap_ground.SetTile(posint, tile_floor);
-                    tilemap_block.SetTile(posint, tile_block);
-                    //Instantiate(tile_block, pos, Quaternion.identity, block_parent.transform);
+                    //tilemap_block.SetTile(posint, tile_block);
+                    Instantiate(obj_block, pos, Quaternion.identity, block_parent.transform);
                     break;
                 case ObjId.MINE:
                     tilemap_ground.SetTile(posint, tile_floor);
-                    tilemap_under.SetTile(posint, tile_mine);
-                    if(!debugMan.on_visiblemine)
-                        tilemap_block.SetTile(posint, tile_block);
-                    //Instantiate(tile_mine, pos, Quaternion.identity, mine_parent.transform);
+                    //tilemap_under.SetTile(posint, tile_mine);
+                    //if(!debugMan.on_visiblemine)
+                    //    tilemap_block.SetTile(posint, tile_block);
+                    Instantiate(obj_block, pos, Quaternion.identity, block_parent.transform);
                     break;
                 case ObjId.HOLE:
                     break;
@@ -193,8 +193,10 @@ public class CreateStage : MonoBehaviour
     public void DeleteAllBlock()
     {
         //オブジェクト削除
-        if (block_parent)
-                Destroy(block_parent);   
+        foreach(Transform obj in block_parent.transform)
+        {
+            Destroy(obj.gameObject);
+        }
 
         //タイル削除
         if (grid == null) return;

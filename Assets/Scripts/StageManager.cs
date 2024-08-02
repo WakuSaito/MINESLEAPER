@@ -24,13 +24,19 @@ public class StageManager : MonoBehaviour
     StageData stage = new StageData();      //ステージのブロックデータ
     StageData stage_flag = new StageData(); //ステージの旗データ
 
+    List<GameObject> blocks = new List<GameObject>();
+
     CreateStage createStage;//ステージ作成スクリプト
     PlayerMove playerMove;  //プレイヤースクリプト
     SaveData saveData;      //セーブデータスクリプト
 
     DebugMan debugMan;//デバッグ用フラグ
 
+    //ブロックの親オブジェクト
+    [SerializeField]
+    GameObject block_parent;
 
+    //タイルマップ
     [SerializeField]//旗のタイルマップ
     Tilemap flag_tilemap;
     [SerializeField]//ブロックのタイルマップ
@@ -56,7 +62,7 @@ public class StageManager : MonoBehaviour
     float chain_explo_delay = 0.3f;
 
     int current_stage = 1;//現在のステージ
-    int deepest_stage = 1;//たどり着いたことのある最奥のステージ
+    public int deepest_stage = 1;//たどり着いたことのある最奥のステージ
 
     //周囲の座標
     readonly Vector2Int[] surround_pos = 
@@ -110,6 +116,8 @@ public class StageManager : MonoBehaviour
         playerMove.SetDirection(Vector2Int.down);//プレイヤーの向き変更
         playerMove.UpdateAttackTarget();
 
+        FindAllBlock();
+
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
         {
@@ -161,10 +169,11 @@ public class StageManager : MonoBehaviour
             Explosion(_pos);//爆発処理
         }
 
-        block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
+        //block_tilemap.SetTile((Vector3Int)_pos, null);//ブロックの削除
+        GetBlock(_pos).Broken();//ブロック削除
 
         //連続して開ける
-        if (block_id == ObjId.BLOCK && GetMineCount(_pos) == 0 && debugMan.on_areaopen)
+        if (debugMan.on_areaopen && block_id == ObjId.BLOCK && GetMineCount(_pos) == 0)
         {
             //周囲4マスを探索
             for (int i = 0; i < surround4_pos.Length; i++)
@@ -182,20 +191,26 @@ public class StageManager : MonoBehaviour
     //爆発
     public void Explosion(Vector2Int _pos)
     {
-        //周囲8マスを探索
+        //周囲8マスのプレイヤーを探索
         for (int i = 0; i < surround_pos.Length; i++)
         {
             //周囲の座標
             Vector2Int pos = _pos + surround_pos[i];
             //プレイヤーの座標
             Vector2Int p_pos = playerMove.GetIntPos();
+            Debug.Log("player座標:" + p_pos);
             //周囲にプレイヤーがいた場合
-            if(pos == p_pos)
+            if (pos == p_pos)
             {
-                int num = GetMineCount(p_pos)+1;//足元の数字を取得
+                int num = GetMineCount(p_pos) + 1;//足元の数字を取得
                 playerMove.StartLeap(_pos, num);//その分ふっとばし
             }
-
+        }
+        //周囲8マスのブロックを探索
+        for (int i = 0; i < surround_pos.Length; i++)
+        {
+            //周囲の座標
+            Vector2Int pos = _pos + surround_pos[i];
             ObjId id = stage.GetData(pos);
 
             //誘爆（ワンテンポ遅らせるようにする）
@@ -287,6 +302,27 @@ public class StageManager : MonoBehaviour
         return stage.GetData(_pos);
     }
 
+    public Block GetBlock(Vector2Int _pos)
+    {
+        foreach(var obj in blocks)
+        {
+            if (obj == null) continue;
+
+            Block block = obj.GetComponent<Block>();
+            if (block.GetIntPos() == _pos) 
+                return block;
+        }
+        return null;
+    }
+
+    private void FindAllBlock()
+    {
+        blocks.Clear();
+        foreach(Transform obj in block_parent.transform)
+            blocks.Add(obj.gameObject);
+    }
+
+
     //ブロックを押す関数
     public bool PushBlock(Vector2Int _pos, Vector2Int _vec)
     {
@@ -312,6 +348,8 @@ public class StageManager : MonoBehaviour
         {
             DeleteFlag(_pos);
             stage.SetData(_pos, ObjId.EMPTY);
+
+            stage.SetData(next_pos, ObjId.EMPTY);//穴を地面に変える
         }
         else if (stage_flag.GetData(_pos) == ObjId.FLAG)//旗の移動
         {
@@ -326,17 +364,14 @@ public class StageManager : MonoBehaviour
             stage.Move(_pos, next_pos);
         }
 
-        //穴は変更しない　タイルの変更は関数を作成してもいいかも
-        if (next_id != ObjId.HOLE)
+
+        Block block = GetBlock(_pos);//ブロック取得
+        block.Move(next_pos);//移動
+       
+        if (next_id != ObjId.HOLE) //穴に落ちる処理
         {
-            //移動先画像変更
-            if (debugMan.on_visiblemine && id == ObjId.MINE)
-                block_tilemap.SetTile((Vector3Int)next_pos, tile_mine);
-            else
-                block_tilemap.SetTile((Vector3Int)next_pos, tile_block);
+            block.Fall();
         }
-        //現座標画像変更
-        block_tilemap.SetTile((Vector3Int)_pos, null);
 
 
         //数字の更新
@@ -394,5 +429,8 @@ public class StageManager : MonoBehaviour
 
             UpdateTileNum(data.Key);//更新
         }
+
+        FindAllBlock();
+
     }
 }

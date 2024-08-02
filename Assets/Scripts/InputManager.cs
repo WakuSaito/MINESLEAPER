@@ -77,7 +77,9 @@ public class InputManager : MonoBehaviour
         //メニュー操作
         if(menuUI.is_active && !menuUI.is_animation)
         {
-            if (Input.GetKeyDown(KeyCode.S))
+            //ボタンが選択状態で無いとき選択する
+            float hor = Input.GetAxisRaw("Vertical");
+            if (hor != 0)
             {
                 menuUI.SelectButton();
             }

@@ -20,10 +20,7 @@ public class Block : ObjBase
 
     public override void Broken()
     {
-        if (on_mine)
-            Explosion();
-
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
 
     public override void Fall()
