@@ -4060,6 +4060,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c56fde4b8680646839cb783f1a0dbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  block_parent: {fileID: 1824352088}
   flag_tilemap: {fileID: 1274739380}
   block_tilemap: {fileID: 1044479644}
   under_tilemap: {fileID: 679078663}
@@ -4113,7 +4114,7 @@ MonoBehaviour:
   tile_block: {fileID: 11400000, guid: 7836077ade5f4a94b9ac8f5bc651838b, type: 2}
   tile_mine: {fileID: 11400000, guid: 0eca728b64a1bd54aa9d0afa594998a4, type: 2}
   tile_flag: {fileID: 11400000, guid: 5724dfd7ba4bd7f4aadc32652b4fccb3, type: 2}
-  obj_block: {fileID: 0}
+  obj_block: {fileID: 632800410732874065, guid: a54597f5edeb29044b665ae8cce21879, type: 3}
   obj_mine: {fileID: 0}
   block_parent: {fileID: 1824352088}
 --- !u!1 &1665343046
