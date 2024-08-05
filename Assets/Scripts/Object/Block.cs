@@ -24,6 +24,7 @@ public class Block : ObjBase
 
     public override void Fall()
     {
+        soundManager.Play(soundManager.block_fall);
         //íœ
         Destroy(gameObject);
     }

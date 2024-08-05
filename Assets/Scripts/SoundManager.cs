@@ -18,6 +18,8 @@ public class SoundManager : MonoBehaviour
     public AudioClip player_goal;
     [SerializeField]//ブロック移動
     public AudioClip block_move;
+    [SerializeField]//ブロック落下
+    public AudioClip block_fall;
     [SerializeField]//爆発
     public AudioClip block_explosion;
     [SerializeField]//ボタン選択

@@ -32,9 +32,9 @@ public class DebugMan : MonoBehaviour
             on_allstage_open = false;
         }
 
-        if(Input.GetKeyDown(KeyCode.N))
-        {
-            stageManager.ChangeNextStage();
-        }
+        //if(Input.GetKeyDown(KeyCode.N))
+        //{
+        //    stageManager.ChangeNextStage();
+        //}
     }
 }

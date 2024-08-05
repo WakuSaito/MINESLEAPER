@@ -1171,10 +1171,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05ccea1aa5d8fab4f920152ee5f8da09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  on_visiblemine: 1
+  on_visiblemine: 0
   on_areaopen: 0
   on_open_anywhere: 0
-  on_allstage_open: 1
+  on_allstage_open: 0
 --- !u!4 &280318977
 Transform:
   m_ObjectHideFlags: 0
@@ -3077,6 +3077,7 @@ MonoBehaviour:
   player_land: {fileID: 8300000, guid: 4392d9c752f24444792b979c07058f4e, type: 3}
   player_goal: {fileID: 8300000, guid: 61506d2b20d3fc240bbe2090d0573efd, type: 3}
   block_move: {fileID: 8300000, guid: 21710f9f86ef2134c84867a17d896cfd, type: 3}
+  block_fall: {fileID: 8300000, guid: 8c2f8b406e6cf52408c7cd63efd025c4, type: 3}
   block_explosion: {fileID: 8300000, guid: 57a93dbac89b96142a93e5220e988e08, type: 3}
   ui_button_select: {fileID: 8300000, guid: 7c5ea4c16f71c2f47a697ae1595c171f, type: 3}
   ui_change: {fileID: 8300000, guid: 0d775ea97d524614a8ada2acf7093512, type: 3}
@@ -5534,8 +5535,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 0.8584906, g: 0.41709685, b: 0.41709685, a: 1}
+  m_Sprite: {fileID: 846476473, guid: 067f21289a406a140839a3ca8a1a49f4, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
