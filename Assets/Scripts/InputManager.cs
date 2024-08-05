@@ -75,9 +75,11 @@ public class InputManager : MonoBehaviour
                     menuUI.OpenUI();
             }      
         }
+        //メニューUIがアニメーション中なら入力を受け付けない
+        if (menuUI.is_animation) return;
 
         //メニュー操作
-        if(menuUI.is_active && !menuUI.is_animation)
+        if(menuUI.is_active)
         {
             //ボタンが選択状態で無いとき選択する
             float hor = Input.GetAxisRaw("Vertical");

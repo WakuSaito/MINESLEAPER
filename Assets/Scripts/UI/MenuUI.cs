@@ -64,7 +64,7 @@ public class MenuUI : MonoBehaviour
         is_active = true;
         is_animation = true;
 
-        soundManager.SetVolume(0.3f);//音を小さくする
+        soundManager.Play(soundManager.ui_open);//SE
         //アニメーション
         {
             //順番にアニメーションさせる
@@ -76,6 +76,7 @@ public class MenuUI : MonoBehaviour
                 StartCoroutine(DelayCoroutine(0.4f, () =>
                 {//終了処理
                     is_animation = false;
+                    soundManager.SetVolume(0.4f);//音を小さくする
 
                     //ボタン有効化
                     SetIntaractable(true);
@@ -94,6 +95,7 @@ public class MenuUI : MonoBehaviour
         SetIntaractable(false);
 
         soundManager.SetVolume(1.0f);//音の大きさを通常に戻す
+        soundManager.Play(soundManager.ui_close);//SE
 
         //アニメーション
         {
@@ -164,6 +166,8 @@ public class MenuUI : MonoBehaviour
     public void SelectStage(int _num)
     {
         stageManager.ChangeStage(_num);//ステージ呼び出し
+
+        soundManager.Play(soundManager.ui_button_select);
 
         CloseUI();//メニューを閉じる
     }

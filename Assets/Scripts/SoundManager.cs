@@ -18,21 +18,28 @@ public class SoundManager : MonoBehaviour
     public AudioClip player_goal;
     [SerializeField]//ブロック移動
     public AudioClip block_move;
+    [SerializeField]//ブロック落下
+    public AudioClip block_fall;
     [SerializeField]//爆発
     public AudioClip block_explosion;
     [SerializeField]//ボタン選択
     public AudioClip ui_button_select;
     [SerializeField]//切り替えアイキャッチ
     public AudioClip ui_change;
+    [SerializeField]//menuを開く
+    public AudioClip ui_open;
+    [SerializeField]//menuを閉じる
+    public AudioClip ui_close;
     [SerializeField]//アンドゥ
     public AudioClip stage_undo;
 
 
-    private float sound_volume = 1.0f;//音のボリューム
+    private float base_sound_volume;//ベースとなる音量
 
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
+        base_sound_volume = audioSource.volume;
     }
     //SE再生
     public void Play(AudioClip _ac, float _volume = 1.0f)
@@ -44,10 +51,9 @@ public class SoundManager : MonoBehaviour
     {
         audioSource.PlayOneShot(_ac[Random.Range(0, _ac.Length)], _volume);
     }
-
+    //音量を変える
     public void SetVolume(float _vol)
-    {
-        sound_volume = _vol;
-        audioSource.volume = _vol;
+    {        
+        audioSource.volume = base_sound_volume * _vol;
     }
 }

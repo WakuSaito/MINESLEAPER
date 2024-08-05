@@ -252,7 +252,7 @@ public class PlayerMove : ObjBase
     public void Goal()
     {
         EndAction();
-        animator.SetTrigger("Default");
+        animator.SetTrigger("Down");
 
         //èIóπéûÇ…é¿çsÇ≥ÇπÇΩÇ¢
         stageManager.Clear();
@@ -268,13 +268,25 @@ public class PlayerMove : ObjBase
     public void SetDirection(Vector2Int _vec)
     {
         if (_vec == Vector2Int.up)
+        {
             direction = Direction.UP;
+            animator.SetTrigger("Up");
+        }
         else if (_vec == Vector2Int.left)
+        {
             direction = Direction.LEFT;
+            animator.SetTrigger("Left");
+        }
         else if (_vec == Vector2Int.down)
+        {
             direction = Direction.DOWN;
+            animator.SetTrigger("Down");
+        }
         else if (_vec == Vector2Int.right)
+        {
             direction = Direction.RIGHT;
+            animator.SetTrigger("Right");
+        }
 
         UpdateAttackTarget();
     }
