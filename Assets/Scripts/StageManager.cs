@@ -59,6 +59,7 @@ public class StageManager : MonoBehaviour
 
     bool is_explosion = false;//爆発したか
 
+
     //周囲の座標
     readonly Vector2Int[] surround_pos = 
     {
@@ -99,7 +100,7 @@ public class StageManager : MonoBehaviour
     //ステージ変更
     public void ChangeNextStage()
     {
-        ChangeStage(current_stage + 1);
+            ChangeStage(current_stage+1);
     }
     public void ChangeStage(int _num)
     {
@@ -107,6 +108,13 @@ public class StageManager : MonoBehaviour
         if (deepest_stage < current_stage) 
             deepest_stage = current_stage;//最奥の更新
         stage = createStage.GetStageFileData(current_stage);
+        //データが存在しなければ無理やり用意
+        if (stage == null)
+        {
+            stage = createStage.GetStageFileData(0);
+            current_stage = 0;
+        }
+        //ステージ配置
         createStage.SetAllBlockData(stage);
 
         playerMove.SetDirection(Vector2Int.down);//プレイヤーの向き変更
