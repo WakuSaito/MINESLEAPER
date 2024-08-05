@@ -24,6 +24,10 @@ public class SoundManager : MonoBehaviour
     public AudioClip ui_button_select;
     [SerializeField]//切り替えアイキャッチ
     public AudioClip ui_change;
+    [SerializeField]//menuを開く
+    public AudioClip ui_open;
+    [SerializeField]//menuを閉じる
+    public AudioClip ui_close;
     [SerializeField]//アンドゥ
     public AudioClip stage_undo;
 

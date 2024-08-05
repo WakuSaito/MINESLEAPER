@@ -24,7 +24,8 @@ public class Block : ObjBase
 
     public override void Fall()
     {
-       
+        //íœ
+        Destroy(gameObject);
     }
 
    

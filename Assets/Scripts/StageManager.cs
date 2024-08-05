@@ -50,6 +50,8 @@ public class StageManager : MonoBehaviour
     TileBase tile_flag;
     [SerializeField]//数字
     TileBase[] tile_num = new TileBase[9];
+    [SerializeField]//床
+    TileBase tile_floor;
 
     [SerializeField]//誘爆の待ち時間
     float chain_explo_delay = 0.3f;
@@ -344,6 +346,8 @@ public class StageManager : MonoBehaviour
             if (!PushBlock(next_pos, _vec)) return false;
         }
 
+        Block block = GetBlock(_pos);//ブロック取得
+
         //移動先が穴
         if (next_id == ObjId.HOLE)
         {
@@ -351,6 +355,12 @@ public class StageManager : MonoBehaviour
             stage.SetData(_pos, ObjId.EMPTY);
 
             stage.SetData(next_pos, ObjId.EMPTY);//穴を地面に変える
+
+            block.Move(next_pos, () =>
+            { //移動後に落とす
+                block.Fall();
+                ground_tilemap.SetTile((Vector3Int)next_pos, tile_floor);//タイルを貼る
+            });//移動
         }
         else if (stage_flag.GetData(_pos) == ObjId.FLAG)//旗の移動
         {
@@ -359,21 +369,15 @@ public class StageManager : MonoBehaviour
             stage.Move(_pos, next_pos);
 
             SwitchFlag(next_pos);//旗の情報変更
+            block.Move(next_pos);
+
         }
         else
         {
+            //移動
             stage.Move(_pos, next_pos);
+            block.Move(next_pos);
         }
-
-
-        Block block = GetBlock(_pos);//ブロック取得
-        block.Move(next_pos);//移動
-       
-        if (next_id != ObjId.HOLE) //穴に落ちる処理
-        {
-            block.Fall();
-        }
-
 
         //数字の更新
         for (int i = 0; i < surround_pos.Length; i++)
