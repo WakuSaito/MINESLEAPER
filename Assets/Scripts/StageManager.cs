@@ -29,6 +29,7 @@ public class StageManager : MonoBehaviour
     CreateStage createStage;//ステージ作成スクリプト
     PlayerMove playerMove;  //プレイヤースクリプト
     SaveData saveData;      //セーブデータスクリプト
+    SoundManager soundManager;//サウンドスクリプト
 
     DebugMan debugMan;//デバッグ用フラグ
 
@@ -39,20 +40,12 @@ public class StageManager : MonoBehaviour
     //タイルマップ
     [SerializeField]//旗のタイルマップ
     Tilemap flag_tilemap;
-    [SerializeField]//ブロックのタイルマップ
-    Tilemap block_tilemap;
     [SerializeField]//ブロック下のタイルマップ（地雷、数字）
     Tilemap under_tilemap;
-    [SerializeField]//壁のタイルマップ
-    Tilemap wall_tilemap;
     [SerializeField]//地面のタイルマップ
     Tilemap ground_tilemap;
 
     //ブロックのTileBase
-    [SerializeField]//ブロック
-    TileBase tile_block;
-    [SerializeField]//爆弾
-    TileBase tile_mine;
     [SerializeField]//旗ブロック
     TileBase tile_flag;
     [SerializeField]//数字
@@ -63,6 +56,9 @@ public class StageManager : MonoBehaviour
 
     int current_stage = 1;//現在のステージ
     public int deepest_stage = 1;//たどり着いたことのある最奥のステージ
+
+    bool is_explosion = false;//爆発したか
+
 
     //周囲の座標
     readonly Vector2Int[] surround_pos = 
@@ -91,6 +87,7 @@ public class StageManager : MonoBehaviour
         createStage = gameObject.GetComponent<CreateStage>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
         saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
 
         debugMan = GameObject.Find("DebugMan").GetComponent<DebugMan>();
     }
@@ -103,7 +100,7 @@ public class StageManager : MonoBehaviour
     //ステージ変更
     public void ChangeNextStage()
     {
-        ChangeStage(current_stage + 1);
+            ChangeStage(current_stage+1);
     }
     public void ChangeStage(int _num)
     {
@@ -111,6 +108,13 @@ public class StageManager : MonoBehaviour
         if (deepest_stage < current_stage) 
             deepest_stage = current_stage;//最奥の更新
         stage = createStage.GetStageFileData(current_stage);
+        //データが存在しなければ無理やり用意
+        if (stage == null)
+        {
+            stage = createStage.GetStageFileData(0);
+            current_stage = 0;
+        }
+        //ステージ配置
         createStage.SetAllBlockData(stage);
 
         playerMove.SetDirection(Vector2Int.down);//プレイヤーの向き変更
@@ -191,6 +195,8 @@ public class StageManager : MonoBehaviour
     //爆発
     public void Explosion(Vector2Int _pos)
     {
+        is_explosion = true;
+
         //周囲8マスのプレイヤーを探索
         for (int i = 0; i < surround_pos.Length; i++)
         {
@@ -213,31 +219,26 @@ public class StageManager : MonoBehaviour
             Vector2Int pos = _pos + surround_pos[i];
             ObjId id = stage.GetData(pos);
 
-            //誘爆（ワンテンポ遅らせるようにする）
-            if(id == ObjId.MINE)
+            //ブロックを開ける
+            if (id == ObjId.MINE || id == ObjId.BLOCK)
             {
-                block_tilemap.SetTile((Vector3Int)pos, null);//ブロックの削除 位置を変更する可能性アリ
-
-                // コルーチンの起動
-                //StartCoroutine(DelayCoroutine(chain_explo_delay, () =>
-                //{
-                    Debug.Log("誘爆");
-                    // 3秒後にここの処理が実行される
-                    OpenBlock(pos);//爆発処理
-                //}));
-                continue;
-            }
-            //ブロックは開く
-            else if (id == ObjId.BLOCK)
-            {
-                OpenBlock(pos);
+                OpenBlock(pos);//開ける
             }
             //空白なら数字更新
-            else if(id == ObjId.EMPTY)
+            else if (id == ObjId.EMPTY)
             {
                 UpdateTileNum(pos);
             }
         }
+
+    }
+    //爆発処理が動いたか調べる
+    public bool CheckExplosion()
+    {
+        if (!is_explosion) return false;
+        is_explosion = false;
+        soundManager.Play(soundManager.block_explosion);//爆発音
+        return true;
     }
 
     //旗設置切り替え
@@ -403,6 +404,8 @@ public class StageManager : MonoBehaviour
         var memento = new StageMemento();
         memento.stageData = new StageData();
         memento.stageData.data = new Dictionary<Vector2Int, ObjId>(stage.data);
+        memento.flagData = new StageData();
+        memento.flagData.data = new Dictionary<Vector2Int, ObjId>(stage_flag.data);
 
         return memento;
     }
@@ -410,17 +413,13 @@ public class StageManager : MonoBehaviour
     //ステージデータのロード
     public void SetMemento(StageMemento memento)
     {
+        //データ変更
         stage = memento.stageData;
+        stage_flag = memento.flagData;
 
+        //ステージ配置
         createStage.SetAllBlockData(stage);
-
-        foreach(var data in stage_flag.data)
-        {
-            if(data.Value == ObjId.FLAG)
-            {
-                flag_tilemap.SetTile((Vector3Int)data.Key, tile_flag);
-            }
-        }
+        createStage.SetAllBlockData(stage_flag, false);//置き換えは行わない
 
         //全空白の数字を更新
         foreach (KeyValuePair<Vector2Int, ObjId> data in stage.data)
@@ -430,7 +429,6 @@ public class StageManager : MonoBehaviour
             UpdateTileNum(data.Key);//更新
         }
 
-        FindAllBlock();
-
+        FindAllBlock();//ブロックデータ変更
     }
 }

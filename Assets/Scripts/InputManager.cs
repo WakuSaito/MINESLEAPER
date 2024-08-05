@@ -8,6 +8,7 @@ public class InputManager : MonoBehaviour
     StageManager stageManager;
     PlayerMove playerMove;
     SaveData saveData;
+    SoundManager soundManager;//サウンドスクリプト
 
     MenuUI menuUI;
 
@@ -26,6 +27,7 @@ public class InputManager : MonoBehaviour
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
         playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
         saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
 
         menuUI = GameObject.Find("MenuUI").GetComponent<MenuUI>();
 
@@ -110,7 +112,7 @@ public class InputManager : MonoBehaviour
             //旗設置切り替え  
             if(Input.GetMouseButtonDown(1))
             {
-                stageManager.SwitchFlag(select_pos);
+                stageManager.SwitchFlag(GetIntMousePos());
             } 
             if (Input.GetKeyDown(KeyCode.F))
             {
@@ -119,7 +121,14 @@ public class InputManager : MonoBehaviour
 
             //アンドゥ
             if (Input.GetKeyDown(KeyCode.R))
-                saveData.SetMemento(saveData.GetMementoEnd() - 1);
+            {
+                int num = saveData.GetMementoEnd() - 1;//セットするデータ番号（現在のひとつ前）
+                if (num >= 0)//データがあれば
+                {
+                    saveData.SetMemento(num);//ステージデータセット
+                    soundManager.Play(soundManager.stage_undo);//SE
+                }
+            }
         }
 
     }
