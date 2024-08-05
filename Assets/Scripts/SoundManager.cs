@@ -28,11 +28,12 @@ public class SoundManager : MonoBehaviour
     public AudioClip stage_undo;
 
 
-    private float sound_volume = 1.0f;//音のボリューム
+    private float base_sound_volume;//ベースとなる音量
 
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
+        base_sound_volume = audioSource.volume;
     }
     //SE再生
     public void Play(AudioClip _ac, float _volume = 1.0f)
@@ -44,10 +45,9 @@ public class SoundManager : MonoBehaviour
     {
         audioSource.PlayOneShot(_ac[Random.Range(0, _ac.Length)], _volume);
     }
-
+    //音量を変える
     public void SetVolume(float _vol)
-    {
-        sound_volume = _vol;
-        audioSource.volume = _vol;
+    {        
+        audioSource.volume = base_sound_volume * _vol;
     }
 }
