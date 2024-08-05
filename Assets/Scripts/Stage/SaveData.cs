@@ -5,6 +5,7 @@ using UnityEngine;
 public class StageMemento
 {
     public StageData stageData;
+    public StageData flagData;
 }
 
 public class PlayerMemento

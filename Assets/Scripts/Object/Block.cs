@@ -5,21 +5,20 @@ using DG.Tweening;
 
 public class Block : ObjBase
 {
-    StageManager stageManager;
-
-    //Šø‚ª—§‚Á‚Ä‚¢‚é‚©
-    public bool on_flag = false;
-
-    //’n—‹‚ª“ü‚Á‚Ä‚¢‚é‚©
-    public bool on_mine = false;
+    SoundManager soundManager;
 
     private void Awake()
     {
-        stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
+        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
+    }
+    public override void MoveSound()
+    {
+        soundManager.Play(soundManager.block_move);
     }
 
     public override void Broken()
     {
+        //íœ
         Destroy(gameObject);
     }
 
@@ -28,8 +27,5 @@ public class Block : ObjBase
        
     }
 
-    protected void Explosion()
-    {
-
-    }
+   
 }

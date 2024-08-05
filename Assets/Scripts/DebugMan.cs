@@ -31,5 +31,10 @@ public class DebugMan : MonoBehaviour
             stageManager.deepest_stage = 100;
             on_allstage_open = false;
         }
+
+        if(Input.GetKeyDown(KeyCode.N))
+        {
+            stageManager.ChangeNextStage();
+        }
     }
 }

@@ -16,6 +16,7 @@ public abstract class ObjBase : MonoBehaviour
         seq.Play().OnComplete(()=> {
             _complete?.Invoke();
         });
+        MoveSound();
 
         return true;
     }
@@ -26,9 +27,11 @@ public abstract class ObjBase : MonoBehaviour
         seq.Play().OnComplete(() => {
             _complete?.Invoke();
         });
+        MoveSound();
 
         return true;
     }
+    public virtual void MoveSound() { }
 
     public abstract void Fall();
 

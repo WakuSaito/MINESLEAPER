@@ -17,6 +17,7 @@ public class PlayerMove : ObjBase
 {
     StageManager stageManager;
     SaveData saveData;
+    SoundManager soundManager;
 
     Animator animator;
 
@@ -44,7 +45,8 @@ public class PlayerMove : ObjBase
     private void Awake()
     {
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
-        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();        
+        saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
 
         animator = gameObject.GetComponent<Animator>();
     }
@@ -94,6 +96,8 @@ public class PlayerMove : ObjBase
             UpdateAttackTarget();
         });
 
+        soundManager.Play(soundManager.player_move);
+
         return true;
     }
 
@@ -108,6 +112,8 @@ public class PlayerMove : ObjBase
             is_action = true;
             //アニメーション
             animator.SetTrigger("Goal");
+
+            soundManager.Play(soundManager.player_goal);//SE
 
             return true;
         }
@@ -183,9 +189,11 @@ public class PlayerMove : ObjBase
             Vector2Int hypo_pos = p_pos + (GetDirectionVec() * -1);
             StartLeap(hypo_pos, leap_distance);
             stageManager.OpenBlock(p_pos);
+            stageManager.CheckExplosion();//爆発したかチェック
             return;
         }
 
+        soundManager.Play(soundManager.player_land);
         is_leap = false;
         EndAction();
     }
@@ -200,14 +208,17 @@ public class PlayerMove : ObjBase
         //ブロックを壊す
         if(stageManager.OpenBlock(attack_target_pos))
         {
+            stageManager.CheckExplosion();//爆発したかチェック
             UpdateAttackTarget();//情報更新
             if (!is_leap)
                 saveData.CreateMemento();
 
+            soundManager.Play(soundManager.player_attack_hit);
             return true;
         }
         else//壊せなかった場合
         {
+            soundManager.Play(soundManager.player_attack_miss);
             return false;
         }
     }
@@ -216,6 +227,7 @@ public class PlayerMove : ObjBase
         //ブロックを壊す
         if (stageManager.OpenBlock(_pos))
         {
+            stageManager.CheckExplosion();//爆発したかチェック
             UpdateAttackTarget();//情報更新
             if (!is_leap)
                 saveData.CreateMemento();

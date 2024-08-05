@@ -8,18 +8,15 @@ public class CreateStage : MonoBehaviour
 {
     GameObject player;//プレイヤーオブジェクト
 
-    DebugMan debugMan;
 
     //グリッド（タイルマップの親）
     Grid grid;
-    //ブロックのタイルマップ
-    Tilemap tilemap_block;
-    //ブロック下のタイルマップ（地雷、数字）
-    Tilemap tilemap_under;
     //壁のタイルマップ
     Tilemap tilemap_wall;
     //地面のタイルマップ
     Tilemap tilemap_ground;
+    //旗のタイルマップ
+    Tilemap tilemap_flag;
 
     //タイル
     [SerializeField]//床
@@ -55,12 +52,9 @@ public class CreateStage : MonoBehaviour
     {
         player = GameObject.FindGameObjectWithTag("Player");
         grid = GameObject.Find("Grid").GetComponent<Grid>();
-        tilemap_block = GameObject.Find("BlockTilemap").GetComponent<Tilemap>();
-        tilemap_under = GameObject.Find("UnderBlockTilemap").GetComponent<Tilemap>();
         tilemap_wall  = GameObject.Find("WallTilemap").GetComponent<Tilemap>();
         tilemap_ground =GameObject.Find("GroundTilemap").GetComponent<Tilemap>();
-
-        debugMan = GameObject.Find("DebugMan").GetComponent<DebugMan>();
+        tilemap_flag= GameObject.Find("FlagTilemap").GetComponent<Tilemap>();
     }
 
     //ファイルからステージ情報を取得
@@ -173,17 +167,16 @@ public class CreateStage : MonoBehaviour
                     break;
                 case ObjId.BLOCK:
                     tilemap_ground.SetTile(posint, tile_floor);
-                    //tilemap_block.SetTile(posint, tile_block);
                     Instantiate(obj_block, pos, Quaternion.identity, block_parent.transform);
                     break;
                 case ObjId.MINE:
                     tilemap_ground.SetTile(posint, tile_floor);
-                    //tilemap_under.SetTile(posint, tile_mine);
-                    //if(!debugMan.on_visiblemine)
-                    //    tilemap_block.SetTile(posint, tile_block);
-                    Instantiate(obj_block, pos, Quaternion.identity, block_parent.transform);
+                    Instantiate(obj_mine, pos, Quaternion.identity, block_parent.transform);
                     break;
                 case ObjId.HOLE:
+                    break;
+                case ObjId.FLAG:
+                    tilemap_flag.SetTile(posint, tile_flag);
                     break;
             }
         }
@@ -209,50 +202,4 @@ public class CreateStage : MonoBehaviour
         }
     }
 
-    //全タイルのブロック情報を取得
-    public StageData GetAllBlockData()
-    {
-        StageData stage = new StageData();
-
-        //ブロックの情報取得
-        foreach (var pos in tilemap_block.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!tilemap_block.HasTile(pos)) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.BLOCK);
-        }
-        //地雷の位置情報取得
-        foreach (var pos in tilemap_under.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!tilemap_under.HasTile(pos)) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.MINE);
-        }
-        //壁の情報取得
-        foreach (var pos in tilemap_wall.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!tilemap_wall.HasTile(pos)) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.WALL);
-        }
-        //地面の情報取得
-        foreach (var pos in tilemap_ground.cellBounds.allPositionsWithin)
-        {
-            //その位置にタイルが無ければ処理しない
-            if (!tilemap_ground.HasTile(pos)) continue;
-            //すでに他のデータがあるなら処理しない
-            if (stage.GetData((Vector2Int)pos) != ObjId.NULL) continue;
-
-            //位置情報とオブジェクト情報を保存
-            stage.SetData((Vector2Int)pos, ObjId.EMPTY);
-        }
-
-        return stage;
-    }
 }

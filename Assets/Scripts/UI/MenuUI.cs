@@ -10,6 +10,7 @@ public class MenuUI : MonoBehaviour
 {
     StageManager stageManager;
     SaveData saveData;
+    SoundManager soundManager;
 
     //メニューが有効
     public bool is_active = false;
@@ -41,6 +42,7 @@ public class MenuUI : MonoBehaviour
 
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
         saveData = GameObject.Find("SaveData").GetComponent<SaveData>();
+        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
 
         //ステージボタンの全取得
         button_stage = ui_stage.GetComponentsInChildren<Button>();
@@ -62,6 +64,7 @@ public class MenuUI : MonoBehaviour
         is_active = true;
         is_animation = true;
 
+        soundManager.SetVolume(0.3f);//音を小さくする
         //アニメーション
         {
             //順番にアニメーションさせる
@@ -90,6 +93,7 @@ public class MenuUI : MonoBehaviour
         //ボタンの無効化
         SetIntaractable(false);
 
+        soundManager.SetVolume(1.0f);//音の大きさを通常に戻す
 
         //アニメーション
         {
@@ -138,6 +142,8 @@ public class MenuUI : MonoBehaviour
         Debug.Log("ステージリセット");
         //最初の状態に戻す
         saveData.SetMemento(0);
+
+        soundManager.Play(soundManager.ui_change);
 
         CloseUI();//メニューを閉じる
     }
