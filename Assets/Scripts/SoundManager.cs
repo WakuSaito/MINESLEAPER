@@ -33,6 +33,9 @@ public class SoundManager : MonoBehaviour
     [SerializeField]//アンドゥ
     public AudioClip stage_undo;
 
+    [SerializeField]//ステージ全開放
+    public AudioClip stage_fullopen;
+
 
     private float base_sound_volume;//ベースとなる音量
 

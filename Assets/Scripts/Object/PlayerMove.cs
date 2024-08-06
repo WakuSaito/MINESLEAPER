@@ -31,6 +31,7 @@ public class PlayerMove : ObjBase
     int leap_distance = 3;
 
     public bool is_action; //行動中フラグ
+    public bool is_fall;
     bool is_leap = false;
 
     //攻撃対象の情報
@@ -121,7 +122,7 @@ public class PlayerMove : ObjBase
             animator.SetTrigger("Goal");
 
             soundManager.Play(soundManager.player_goal);//SE
-            StartCoroutine( DelayCoroutine(1.0f, ()=>
+            StartCoroutine( DelayCoroutine(1.5f, ()=>
             { //終了時に実行
                 Goal();
             }));
@@ -134,7 +135,7 @@ public class PlayerMove : ObjBase
             //アニメーション
             animator.SetTrigger("Fall");
 
-            StartCoroutine(DelayCoroutine(1.0f, () =>
+            StartCoroutine(DelayCoroutine(1.5f, () =>
             { //終了時に実行
                 Fall();
             }));
@@ -263,7 +264,8 @@ public class PlayerMove : ObjBase
     public override void Fall()
     {
         Debug.Log("FALL!!");
-        EndAction();//アクション終了
+        is_fall = true;
+        EndAction();
     }
 
     public void Goal()

@@ -5,6 +5,7 @@ using UnityEngine;
 public class DebugMan : MonoBehaviour
 {
     StageManager stageManager;
+    SoundManager soundManager;
 
     [SerializeField, Header("爆弾を見えるようにする(デバッグ用)")]
     public bool on_visiblemine = false;
@@ -18,6 +19,8 @@ public class DebugMan : MonoBehaviour
     private void Awake()
     {
         stageManager = GameObject.Find("StageManager").GetComponent<StageManager>();
+        soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
+
     }
     private void Update()
     {
@@ -25,11 +28,13 @@ public class DebugMan : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.G))
         {
             stageManager.deepest_stage = 100;
+            soundManager.Play(soundManager.stage_fullopen);
         }
         if(on_allstage_open)
         {
             stageManager.deepest_stage = 100;
             on_allstage_open = false;
+            soundManager.Play(soundManager.stage_fullopen);
         }
 
         //if(Input.GetKeyDown(KeyCode.N))

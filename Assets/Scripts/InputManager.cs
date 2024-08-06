@@ -86,7 +86,15 @@ public class InputManager : MonoBehaviour
         //入力処理
         else 
         {
-            if (playerMove.is_action) return;//行動中でない
+            if (playerMove.is_action) return;
+            //アンドゥ
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                playerMove.is_fall = false;
+                Undo();
+            }
+
+            if (playerMove.is_fall) return;//行動中でない
             if (EventSystem.current.currentSelectedGameObject) return;//ボタン選択中でない
 
             //プレイヤーの移動
@@ -117,11 +125,7 @@ public class InputManager : MonoBehaviour
                 stageManager.SwitchFlag(playerMove.attack_target_pos);
             }
 
-            //アンドゥ
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                Undo();
-            }
+            
         }
 
     }

@@ -121,6 +121,7 @@ public class StageManager : MonoBehaviour
 
         playerMove.SetDirection(Vector2Int.down);//プレイヤーの向き変更
         playerMove.UpdateAttackTarget();
+        playerMove.is_fall = false;
 
         FindAllBlock();
 

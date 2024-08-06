@@ -3025,7 +3025,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 2f15070610b1ecc459e96782271680e5, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.5
+  m_Volume: 1
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -3141,6 +3141,7 @@ MonoBehaviour:
   ui_open: {fileID: 8300000, guid: e5c8fd8f1b240384bbf363f6b51b98f0, type: 3}
   ui_close: {fileID: 8300000, guid: 50b250827ea34b9408cc27ccea55fefd, type: 3}
   stage_undo: {fileID: 8300000, guid: 0a67eac0aad44814484e34dcffe4004a, type: 3}
+  stage_fullopen: {fileID: 8300000, guid: e03fc863d415f0e409969d0b3c4749ca, type: 3}
 --- !u!4 &783298986
 Transform:
   m_ObjectHideFlags: 0
