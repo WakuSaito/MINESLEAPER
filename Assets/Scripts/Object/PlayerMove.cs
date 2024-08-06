@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using System;
 
 
 //方向
@@ -34,7 +35,6 @@ public class PlayerMove : ObjBase
 
     //攻撃対象の情報
     public Vector2Int attack_target_pos;
-    ObjId attack_target_id;
 
     // Playerから移動速度を取得できるように設定
     [SerializeField] float moveSpeed;
@@ -49,6 +49,13 @@ public class PlayerMove : ObjBase
         soundManager = GameObject.Find("SoundManager").GetComponent<SoundManager>();
 
         animator = gameObject.GetComponent<Animator>();
+    }
+
+    // 一定時間後に処理を呼び出すコルーチン
+    private IEnumerator DelayCoroutine(float seconds, Action action)
+    {
+        yield return new WaitForSeconds(seconds);
+        action?.Invoke();
     }
 
     public void EndAction()
@@ -114,6 +121,10 @@ public class PlayerMove : ObjBase
             animator.SetTrigger("Goal");
 
             soundManager.Play(soundManager.player_goal);//SE
+            StartCoroutine( DelayCoroutine(1.0f, ()=>
+            { //終了時に実行
+                Goal();
+            }));
 
             return true;
         }
@@ -122,6 +133,11 @@ public class PlayerMove : ObjBase
             is_action = true;
             //アニメーション
             animator.SetTrigger("Fall");
+
+            StartCoroutine(DelayCoroutine(1.0f, () =>
+            { //終了時に実行
+                Fall();
+            }));
 
             return true;
         }
@@ -246,13 +262,15 @@ public class PlayerMove : ObjBase
     }
     public override void Fall()
     {
-        EndAction();
+        Debug.Log("FALL!!");
+        EndAction();//アクション終了
     }
 
     public void Goal()
     {
-        EndAction();
-        animator.SetTrigger("Down");
+        Debug.Log("GOAL!!");
+        EndAction();//アクション終了
+        animator.SetTrigger("Default");
 
         //終了時に実行させたい
         stageManager.Clear();
@@ -262,7 +280,6 @@ public class PlayerMove : ObjBase
     {
         //攻撃対象の情報取得
         attack_target_pos = GetIntPos() + GetDirectionVec();
-        attack_target_id = stageManager.GetTileId(attack_target_pos);
     }
 
     public void SetDirection(Vector2Int _vec)
@@ -293,6 +310,16 @@ public class PlayerMove : ObjBase
     public void SetDirection(Direction _dir)
     {
         direction = _dir;
+
+        //見た目変更
+        if (direction == Direction.UP)
+            animator.SetTrigger("Up");
+        else if (direction == Direction.LEFT)
+            animator.SetTrigger("Left");
+        else if (direction == Direction.DOWN)
+            animator.SetTrigger("Down");
+        else if (direction == Direction.RIGHT)
+            animator.SetTrigger("Right");
 
         UpdateAttackTarget();
     }

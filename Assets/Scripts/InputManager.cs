@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InputManager : MonoBehaviour
 {
@@ -85,7 +86,8 @@ public class InputManager : MonoBehaviour
         //入力処理
         else 
         {
-            if (playerMove.is_action) return;
+            if (playerMove.is_action) return;//行動中でない
+            if (EventSystem.current.currentSelectedGameObject) return;//ボタン選択中でない
 
             //プレイヤーの移動
             Vector2Int input_vec = new Vector2Int();
