@@ -67,13 +67,7 @@ public class InputManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if(!menuUI.is_animation)//メニューがアニメーション中で無い
-            {
-                if (menuUI.is_active)//表示非表示を切り替え
-                    menuUI.CloseUI();
-                else
-                    menuUI.OpenUI();
-            }      
+            SwitchMenu();
         }
         //メニューUIがアニメーション中なら入力を受け付けない
         if (menuUI.is_animation) return;
@@ -124,14 +118,32 @@ public class InputManager : MonoBehaviour
             //アンドゥ
             if (Input.GetKeyDown(KeyCode.R))
             {
-                int num = saveData.GetMementoEnd() - 1;//セットするデータ番号（現在のひとつ前）
-                if (num >= 0)//データがあれば
-                {
-                    saveData.SetMemento(num);//ステージデータセット
-                    soundManager.Play(soundManager.stage_undo);//SE
-                }
+                Undo();
             }
         }
+
+    }
+    //アンドゥ
+    public void Undo()
+    {
+        if (playerMove.is_action) return;//行動中でない
+
+        int num = saveData.GetMementoEnd() - 1;//セットするデータ番号（現在のひとつ前）
+        if (num >= 0)//データがあれば
+        {
+            saveData.SetMemento(num);//ステージデータセット
+            soundManager.Play(soundManager.stage_undo);//SE
+        }
+    }
+    //メニューの開閉切り替え
+    public void SwitchMenu()
+    {
+        if (menuUI.is_animation) return;//メニューがアニメーション中でない
+
+        if (menuUI.is_active)//表示非表示を切り替え
+            menuUI.CloseUI();
+        else
+            menuUI.OpenUI();
 
     }
 

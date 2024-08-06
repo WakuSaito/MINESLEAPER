@@ -290,6 +290,12 @@ public class PlayerMove : ObjBase
 
         UpdateAttackTarget();
     }
+    public void SetDirection(Direction _dir)
+    {
+        direction = _dir;
+
+        UpdateAttackTarget();
+    }
     private Vector2Int GetDirectionVec()
     {
         if (direction == Direction.UP)
@@ -318,7 +324,7 @@ public class PlayerMove : ObjBase
     {
         //Debug.Log("PlayerMementoÇÃåƒÇ—èoÇµ" + memento.position);
         transform.position = memento.position;
-        direction = memento.direction;
+        SetDirection(memento.direction);
         is_action = false;
         animator.SetTrigger("Default");
         UpdateAttackTarget();
